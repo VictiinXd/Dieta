@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#FCFCF9;
@@ -327,6 +328,33 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .modal-head h3{margin:0;font-size:16px;font-family:'Archivo Black';font-weight:400;letter-spacing:-.2px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:10px;}
+
+/* ---- área de impressão / PDF ---- */
+.print-area{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  .print-area, .print-area *{visibility:visible;}
+  .print-area{
+    display:block;position:absolute;left:0;top:0;width:100%;padding:0;
+    background:#fff;color:#111;
+  }
+  @page{margin:14mm;}
+}
+.print-title{font-family:'Archivo Black',sans-serif;font-size:26px;margin:0;}
+.print-sub{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#444;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.print-rule-thick{border:none;border-top:6px solid #111;margin:10px 0 16px;}
+.print-kpis{display:flex;gap:24px;margin-bottom:18px;}
+.print-kpis .pk-lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#555;font-family:'IBM Plex Mono';}
+.print-kpis .pk-val{display:block;font-family:'Archivo Black';font-size:19px;margin-top:2px;}
+table.print-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12.5px;}
+table.print-table th{text-align:left;border-bottom:2.5px solid #111;padding:5px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono';}
+table.print-table td{padding:5px 8px;border-bottom:1px solid #ccc;font-family:'IBM Plex Mono';}
+table.print-table.small{margin-bottom:10px;font-size:11.5px;}
+table.print-table.small th, table.print-table.small td{padding:3px 8px;}
+.print-day-block{margin-bottom:16px;break-inside:avoid;}
+.print-day-title{font-weight:800;font-size:13.5px;border-bottom:2px solid #111;padding-bottom:4px;margin-bottom:6px;text-transform:capitalize;}
+.print-meal-name{font-weight:700;font-size:12px;color:#333;margin:8px 0 3px;}
+.print-footer{font-size:10.5px;color:#666;font-family:'IBM Plex Mono';margin-top:16px;border-top:1px solid #ccc;padding-top:8px;}
 </style>
 </head>
 <body data-theme="light">
@@ -341,6 +369,7 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
       <button class="tab-btn" data-view="semana">Semana</button>
       <button class="tab-btn" data-view="calc">Calculadora</button>
       <button class="tab-btn" data-view="config">Config</button>
+      <button class="tab-btn" data-view="export">Exportar</button>
     </nav>
     <button class="iconbtn" id="themeToggle" title="Alternar tema">🌙</button>
   </header>
@@ -384,10 +413,10 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
             <span class="k-val"><span id="kcalTotal">0</span> <small>/ <span id="kcalGoalShown">2000</span> kcal</small></span>
           </div>
           <hr class="rule-mid">
-          <div class="vd-head">% da meta</div>
-          <div class="nutrow"><span class="nm">Proteína</span><span class="vv"><span id="pTotal">0</span> g<span class="vd" id="pVd">0%</span></span></div>
-          <div class="nutrow"><span class="nm">Carboidrato</span><span class="vv"><span id="cTotal">0</span> g<span class="vd" id="cVd">0%</span></span></div>
-          <div class="nutrow"><span class="nm">Gordura</span><span class="vv"><span id="fTotal">0</span> g<span class="vd" id="fVd">0%</span></span></div>
+          <div class="vd-head">consumido/meta (g) · % da meta</div>
+          <div class="nutrow"><span class="nm">Proteína</span><span class="vv"><span id="pTotal">0</span>/<span id="pGoalG">0</span> g<span class="vd" id="pVd">0%</span></span></div>
+          <div class="nutrow"><span class="nm">Carboidrato</span><span class="vv"><span id="cTotal">0</span>/<span id="cGoalG">0</span> g<span class="vd" id="cVd">0%</span></span></div>
+          <div class="nutrow"><span class="nm">Gordura</span><span class="vv"><span id="fTotal">0</span>/<span id="fGoalG">0</span> g<span class="vd" id="fVd">0%</span></span></div>
           <div class="nutrow"><span class="nm">Fibra</span><span class="vv"><span id="fbTotal">0</span> g<span class="vd"></span></span></div>
           <div class="nutrow"><span class="nm">Sódio</span><span class="vv"><span id="naTotal">0</span> mg<span class="vd"></span></span></div>
           <hr class="rule">
@@ -485,6 +514,16 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
         <button class="btn accent" id="saveGoalBtn">Salvar meta</button>
         <div class="help">Prefere calcular a partir do seu peso, altura e objetivo? Use a aba <strong>Calculadora</strong> — o resultado de lá pode ser aplicado direto aqui como sua meta diária.</div>
 
+        <div class="divider-lbl">Distribuição de macros (%)</div>
+        <p class="help">Define a meta em gramas de proteína, carboidrato e gordura mostrada no resumo do dia. O ideal é somar 100%.</p>
+        <div class="field-row">
+          <div class="field"><label>Proteína %</label><input type="number" id="macroP" min="0" max="100" step="1"></div>
+          <div class="field"><label>Carboidrato %</label><input type="number" id="macroC" min="0" max="100" step="1"></div>
+          <div class="field"><label>Gordura %</label><input type="number" id="macroF" min="0" max="100" step="1"></div>
+        </div>
+        <div class="help" id="macroSumHelp"></div>
+        <button class="btn ghost small" id="saveMacrosBtn">Salvar distribuição</button>
+
         <div class="divider-lbl">Refeições</div>
         <p class="help">Defina quais refeições aparecem para escolher ao adicionar um alimento. Você decide quantas e quais usar.</p>
         <div class="meal-chips" id="mealChips"></div>
@@ -518,6 +557,41 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
       </div>
     </div>
   </section>
+
+  <!-- ===================== EXPORTAR ===================== -->
+  <section class="view" id="view-export">
+    <div class="panel" style="max-width:640px;">
+      <h2>Período</h2>
+      <div class="objetivo-cards" id="periodCards">
+        <div class="obj-card sel" data-period="7"><span class="oc-name">Últimos 7 dias</span></div>
+        <div class="obj-card" data-period="30"><span class="oc-name">Últimos 30 dias</span></div>
+        <div class="obj-card" data-period="month"><span class="oc-name">Este mês</span></div>
+        <div class="obj-card" data-period="custom"><span class="oc-name">Personalizado</span></div>
+      </div>
+      <div class="field-row" id="customRangeBox" style="display:none;margin-top:8px;">
+        <div class="field"><label>De</label><input type="date" id="rangeStart"></div>
+        <div class="field"><label>Até</label><input type="date" id="rangeEnd"></div>
+      </div>
+
+      <div class="divider-lbl">Conteúdo</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="includeDetail" checked> Incluir detalhamento (alimentos por refeição, dia a dia)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;">
+        <input type="checkbox" id="includeMacros" checked> Incluir totais de proteína, carboidrato e gordura
+      </label>
+
+      <div class="divider-lbl">Gerar</div>
+      <div class="export-row">
+        <button class="btn accent" id="genPdfBtn">📄 Gerar PDF</button>
+        <button class="btn ghost" id="genXlsxBtn">📊 Gerar Excel</button>
+      </div>
+      <p class="help" style="margin-top:10px;">O PDF abre a janela de impressão do navegador — escolha "Salvar como PDF" no destino. O Excel baixa direto um arquivo .xlsx com abas de resumo e detalhamento.</p>
+    </div>
+  </section>
+
+  <!-- área usada apenas na impressão/PDF, invisível na tela -->
+  <div class="print-area" id="printArea"></div>
 
   <!-- ===================== MODAL: NOVO ALIMENTO PERSONALIZADO ===================== -->
   <div class="modal-overlay" id="foodModalOverlay" style="display:none;">
@@ -563,9 +637,10 @@ const todayStr = (d)=> {
   return `${y}-${m}-${day}`;
 };
 const DEFAULT_MEALS = ['Café da manhã','Almoço','Lanche da tarde','Jantar'];
+const DEFAULT_MACROS = { p:30, c:40, f:30 }; // % das calorias da meta
 function defaultState(){
   return {
-    settings:{ goalKcal:2000, theme:'light', meals: DEFAULT_MEALS.slice(),
+    settings:{ goalKcal:2000, theme:'light', meals: DEFAULT_MEALS.slice(), macros: {...DEFAULT_MACROS},
       calc:{ sex:'f', age:30, weight:65, height:165, activity:1.375, objetivo:0 } },
     logs:{}, customFoods:[]
   };
@@ -582,6 +657,7 @@ function loadState(){
   if(!s.logs) s.logs = {};
   if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
   if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
+  if(!s.settings.macros) s.settings.macros = {...DEFAULT_MACROS};
   // versões antigas guardavam goalMode/goalType/sex/etc direto em settings — se existir e goalKcal
   // ainda não tiver sido calculado a partir disso, resolve para um número simples agora.
   if(s.settings.goalMode === 'calc' && s.settings.weight && s.settings.height){
@@ -595,6 +671,7 @@ function loadState(){
   return s;
 }
 let state = loadState();
+
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
@@ -611,7 +688,7 @@ function allFoods(){
 
 /* ============ navegação por abas ============ */
 const tabBtns = document.querySelectorAll('.tab-btn');
-const views = { hoje: document.getElementById('view-hoje'), semana: document.getElementById('view-semana'), calc: document.getElementById('view-calc'), config: document.getElementById('view-config') };
+const views = { hoje: document.getElementById('view-hoje'), semana: document.getElementById('view-semana'), calc: document.getElementById('view-calc'), config: document.getElementById('view-config'), export: document.getElementById('view-export') };
 tabBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
     tabBtns.forEach(b=>b.classList.remove('active'));
@@ -849,6 +926,15 @@ function addFoodEntry(f){
 function getGoal(){
   return state.settings.goalKcal || 2000;
 }
+// converte a distribuição percentual de macros (Config) em gramas-meta, dada a meta calórica
+function getMacroGoalsGrams(goalKcal){
+  const m = state.settings.macros || DEFAULT_MACROS;
+  return {
+    p: Math.round((goalKcal * (m.p||0)/100) / 4),
+    c: Math.round((goalKcal * (m.c||0)/100) / 4),
+    f: Math.round((goalKcal * (m.f||0)/100) / 9),
+  };
+}
 
 /* ============ render do log diário (agrupado por refeição) ============ */
 const mealsContainer = document.getElementById('mealsContainer');
@@ -905,6 +991,7 @@ function renderLog(){
     kcal:acc.kcal+it.kcal, p:acc.p+it.p, c:acc.c+it.c, f:acc.f+it.f, fb:acc.fb+(it.fb||0), na:acc.na+(it.na||0)
   }), {kcal:0,p:0,c:0,f:0,fb:0,na:0});
   const goal = getGoal();
+  const macroGoals = getMacroGoalsGrams(goal);
   document.getElementById('kcalTotal').textContent = Math.round(totals.kcal);
   document.getElementById('kcalGoalShown').textContent = goal;
   document.getElementById('pTotal').textContent = totals.p.toFixed(1);
@@ -912,10 +999,13 @@ function renderLog(){
   document.getElementById('fTotal').textContent = totals.f.toFixed(1);
   document.getElementById('fbTotal').textContent = totals.fb.toFixed(1);
   document.getElementById('naTotal').textContent = Math.round(totals.na);
-  // %VD baseado na meta calórica: assume 30% kcal de proteina/gordura como referência simples e 50% carbo
-  document.getElementById('pVd').textContent = Math.round((totals.p*4/goal)*100)+'%';
-  document.getElementById('cVd').textContent = Math.round((totals.c*4/goal)*100)+'%';
-  document.getElementById('fVd').textContent = Math.round((totals.f*9/goal)*100)+'%';
+  // meta de cada macro em gramas, calculada pela distribuição % configurada em Config
+  document.getElementById('pGoalG').textContent = macroGoals.p;
+  document.getElementById('cGoalG').textContent = macroGoals.c;
+  document.getElementById('fGoalG').textContent = macroGoals.f;
+  document.getElementById('pVd').textContent = (macroGoals.p>0 ? Math.round((totals.p/macroGoals.p)*100) : 0)+'%';
+  document.getElementById('cVd').textContent = (macroGoals.c>0 ? Math.round((totals.c/macroGoals.c)*100) : 0)+'%';
+  document.getElementById('fVd').textContent = (macroGoals.f>0 ? Math.round((totals.f/macroGoals.f)*100) : 0)+'%';
 
   const diff = totals.kcal - goal;
   const pill = document.getElementById('statusPill'); const txt = document.getElementById('statusText');
@@ -992,11 +1082,41 @@ function syncConfigForm(){
   document.getElementById('manualGoalInput').value = state.settings.goalKcal || 2000;
   renderMealChips();
   renderCustomFoodChips();
+  syncMacroForm();
 }
 document.getElementById('saveGoalBtn').addEventListener('click', ()=>{
   state.settings.goalKcal = parseFloat(document.getElementById('manualGoalInput').value) || 2000;
   saveState(); renderLog();
   alert('Meta salva: ' + getGoal() + ' kcal/dia');
+});
+
+/* ---- distribuição de macros ---- */
+function syncMacroForm(){
+  const m = state.settings.macros || DEFAULT_MACROS;
+  document.getElementById('macroP').value = m.p;
+  document.getElementById('macroC').value = m.c;
+  document.getElementById('macroF').value = m.f;
+  updateMacroSumHelp();
+}
+function updateMacroSumHelp(){
+  const p = parseFloat(document.getElementById('macroP').value)||0;
+  const c = parseFloat(document.getElementById('macroC').value)||0;
+  const f = parseFloat(document.getElementById('macroF').value)||0;
+  const sum = p+c+f;
+  const help = document.getElementById('macroSumHelp');
+  help.textContent = `Soma atual: ${sum}%` + (sum!==100 ? ' — o ideal é 100%, mas o app aceita qualquer valor.' : ' ✓');
+}
+['macroP','macroC','macroF'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateMacroSumHelp);
+});
+document.getElementById('saveMacrosBtn').addEventListener('click', ()=>{
+  state.settings.macros = {
+    p: parseFloat(document.getElementById('macroP').value) || 0,
+    c: parseFloat(document.getElementById('macroC').value) || 0,
+    f: parseFloat(document.getElementById('macroF').value) || 0,
+  };
+  saveState(); renderLog();
+  alert('Distribuição de macros salva.');
 });
 
 /* ---- gestão de refeições ---- */
@@ -1130,6 +1250,7 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       if(!state.customFoods) state.customFoods=[];
       if(!state.settings.meals) state.settings.meals = DEFAULT_MEALS.slice();
       if(!state.settings.calc) state.settings.calc = defaultState().settings.calc;
+      if(!state.settings.macros) state.settings.macros = {...DEFAULT_MACROS};
       saveState(); applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
       alert('Dados importados com sucesso.');
     }catch(err){ alert('Arquivo inválido: ' + err.message); }
@@ -1144,6 +1265,183 @@ document.getElementById('clearBtn').addEventListener('click', ()=>{
     applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
   }
 });
+
+/* ============ exportar (PDF / Excel) ============ */
+const periodCards = document.getElementById('periodCards');
+const customRangeBox = document.getElementById('customRangeBox');
+periodCards.querySelectorAll('.obj-card').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    periodCards.querySelectorAll('.obj-card').forEach(o=>o.classList.remove('sel'));
+    el.classList.add('sel');
+    customRangeBox.style.display = el.dataset.period==='custom' ? 'flex':'none';
+  });
+});
+(function initExportDefaults(){
+  const end = new Date(); const start = new Date(); start.setDate(start.getDate()-6);
+  document.getElementById('rangeStart').value = todayStr(start);
+  document.getElementById('rangeEnd').value = todayStr(end);
+})();
+
+function getReportRange(){
+  const sel = periodCards.querySelector('.obj-card.sel');
+  const period = sel ? sel.dataset.period : '7';
+  const today = new Date();
+  let start, end;
+  if(period==='custom'){
+    start = new Date(document.getElementById('rangeStart').value + 'T00:00:00');
+    end = new Date(document.getElementById('rangeEnd').value + 'T00:00:00');
+    if(isNaN(start) || isNaN(end) || start > end){ alert('Selecione um período personalizado válido.'); return null; }
+  } else if(period==='month'){
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = today;
+  } else {
+    const days = parseInt(period);
+    start = new Date(); start.setDate(start.getDate()-(days-1));
+    end = today;
+  }
+  return { start, end };
+}
+function collectReportData(){
+  const range = getReportRange();
+  if(!range) return null;
+  const { start, end } = range;
+  const goal = getGoal();
+  const days = [];
+  const cur = new Date(start);
+  while(cur <= end){
+    const key = todayStr(cur);
+    const items = state.logs[key] || [];
+    const totals = items.reduce((a,it)=>({kcal:a.kcal+it.kcal, p:a.p+it.p, c:a.c+it.c, f:a.f+it.f}), {kcal:0,p:0,c:0,f:0});
+    days.push({ date:new Date(cur), key, items, totals });
+    cur.setDate(cur.getDate()+1);
+  }
+  return { days, goal, start, end };
+}
+function fmtRangeLabel(start, end){
+  const f = d=> d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  return `${f(start)} a ${f(end)}`;
+}
+function groupItemsByMeal(items){
+  const configMeals = state.settings.meals || [];
+  const used = [...new Set(items.map(it=>it.meal||''))];
+  const ordered = [...configMeals.filter(m=>used.includes(m)), ...used.filter(m=>m && !configMeals.includes(m))];
+  const groups = ordered.map(m=>({ name:m, items: items.filter(it=>it.meal===m) }));
+  if(used.includes('')) groups.push({ name:'Sem refeição', items: items.filter(it=>!it.meal) });
+  return groups;
+}
+
+/* ---- PDF (via janela de impressão do navegador) ---- */
+function renderPrintDayDetail(d){
+  const groups = groupItemsByMeal(d.items);
+  return `<div class="print-day-block">
+    <div class="print-day-title">${d.date.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long'})}</div>
+    ${groups.map(g=>`
+      <div class="print-meal-name">${g.name}</div>
+      <table class="print-table small">
+        <thead><tr><th>Alimento</th><th>Qtd (g)</th><th>Kcal</th></tr></thead>
+        <tbody>${g.items.map(it=>`<tr><td>${it.name}</td><td>${it.grams}</td><td>${it.kcal}</td></tr>`).join('')}</tbody>
+      </table>`).join('')}
+  </div>`;
+}
+function generatePdf(){
+  const data = collectReportData();
+  if(!data) return;
+  const detail = document.getElementById('includeDetail').checked;
+  const macros = document.getElementById('includeMacros').checked;
+  const loggedDays = data.days.filter(d=>d.items.length>0);
+  const totalKcal = loggedDays.reduce((a,d)=>a+d.totals.kcal,0);
+  const totalGoal = data.goal * loggedDays.length;
+  const saldo = totalGoal - totalKcal;
+
+  const html = `
+    <div class="print-title">Balanço</div>
+    <div class="print-sub">Relatório calórico · ${fmtRangeLabel(data.start, data.end)}</div>
+    <hr class="print-rule-thick">
+    <div class="print-kpis">
+      <div><span class="pk-lbl">Meta diária</span><span class="pk-val">${data.goal} kcal</span></div>
+      <div><span class="pk-lbl">Dias registrados</span><span class="pk-val">${loggedDays.length}</span></div>
+      <div><span class="pk-lbl">Saldo do período</span><span class="pk-val">${saldo>=0?'-':'+'}${Math.abs(Math.round(saldo))} kcal</span></div>
+    </div>
+    <table class="print-table">
+      <thead><tr><th>Dia</th><th>Kcal</th><th>Meta</th><th>Saldo</th>${macros?'<th>Prot.</th><th>Carbo</th><th>Gord.</th>':''}</tr></thead>
+      <tbody>
+        ${data.days.map(d=>{
+          const logged = d.items.length>0;
+          const s = data.goal - d.totals.kcal;
+          return `<tr>
+            <td>${d.date.toLocaleDateString('pt-BR',{weekday:'short', day:'2-digit', month:'2-digit'})}</td>
+            <td>${logged?Math.round(d.totals.kcal):'—'}</td>
+            <td>${data.goal}</td>
+            <td>${logged?(s>=0?'-':'+')+Math.abs(Math.round(s)):'—'}</td>
+            ${macros?`<td>${logged?d.totals.p.toFixed(1):'—'}</td><td>${logged?d.totals.c.toFixed(1):'—'}</td><td>${logged?d.totals.f.toFixed(1):'—'}</td>`:''}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    ${detail ? loggedDays.map(renderPrintDayDetail).join('') : ''}
+    <div class="print-footer">Dados nutricionais: TACO 4ª edição (NEPA/UNICAMP) · Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+  `;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+document.getElementById('genPdfBtn').addEventListener('click', generatePdf);
+
+/* ---- Excel (.xlsx via SheetJS) ---- */
+function generateXlsx(){
+  if(typeof XLSX === 'undefined'){
+    alert('Não foi possível carregar o gerador de Excel (é preciso estar conectado à internet na primeira vez). Tente novamente com conexão ativa.');
+    return;
+  }
+  const data = collectReportData();
+  if(!data) return;
+  const detail = document.getElementById('includeDetail').checked;
+  const macros = document.getElementById('includeMacros').checked;
+
+  const resumoHeader = ['Data','Dia da semana','Kcal consumidas','Meta','Saldo'];
+  if(macros) resumoHeader.push('Proteína (g)','Carboidrato (g)','Gordura (g)');
+  const resumoRows = [resumoHeader];
+  data.days.forEach(d=>{
+    const logged = d.items.length>0;
+    const s = data.goal - d.totals.kcal;
+    const row = [
+      d.date.toLocaleDateString('pt-BR'),
+      d.date.toLocaleDateString('pt-BR',{weekday:'long'}),
+      logged ? Math.round(d.totals.kcal) : '',
+      data.goal,
+      logged ? Math.round(s) : '',
+    ];
+    if(macros) row.push(
+      logged ? +d.totals.p.toFixed(1) : '',
+      logged ? +d.totals.c.toFixed(1) : '',
+      logged ? +d.totals.f.toFixed(1) : ''
+    );
+    resumoRows.push(row);
+  });
+  const wb = XLSX.utils.book_new();
+  const wsResumo = XLSX.utils.aoa_to_sheet(resumoRows);
+  wsResumo['!cols'] = [{wch:12},{wch:14},{wch:16},{wch:9},{wch:9},{wch:13},{wch:15},{wch:13}];
+  XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
+
+  if(detail){
+    const detHeader = ['Data','Refeição','Alimento','Quantidade (g)','Kcal','Proteína (g)','Carboidrato (g)','Gordura (g)'];
+    const detRows = [detHeader];
+    data.days.forEach(d=>{
+      d.items.forEach(it=>{
+        detRows.push([
+          d.date.toLocaleDateString('pt-BR'), it.meal || 'Sem refeição', it.name,
+          it.grams, it.kcal, it.p, it.c, it.f
+        ]);
+      });
+    });
+    const wsDet = XLSX.utils.aoa_to_sheet(detRows);
+    wsDet['!cols'] = [{wch:12},{wch:16},{wch:40},{wch:14},{wch:8},{wch:13},{wch:15},{wch:13}];
+    XLSX.utils.book_append_sheet(wb, wsDet, 'Detalhado');
+  }
+
+  const filename = `balanco-calorico_${todayStr(data.start)}_a_${todayStr(data.end)}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
+document.getElementById('genXlsxBtn').addEventListener('click', generateXlsx);
 
 /* ============ init ============ */
 refreshDateHeader();
