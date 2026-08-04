@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Balanço — Diário Calórico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FCFCF9;
+  --bg-soft:#F3F4EF;
+  --panel:#FFFFFF;
+  --ink:#161A17;
+  --ink-soft:#5B655D;
+  --line:rgba(22,26,23,0.14);
+  --line-strong:#161A17;
+  --accent:#1F6F54;
+  --accent-soft:#E3EFE9;
+  --amber:#C98A1F;
+  --amber-soft:#FBF0DD;
+  --danger:#B23B32;
+  --danger-soft:#FBEAE8;
+  --shadow: 0 1px 0 rgba(22,26,23,0.06);
+  --radius: 2px;
+}
+[data-theme="dark"]{
+  --bg:#14181A;
+  --bg-soft:#1B211D;
+  --panel:#1B211D;
+  --ink:#EDEFEA;
+  --ink-soft:#9AA69D;
+  --line:rgba(237,239,234,0.14);
+  --line-strong:#EDEFEA;
+  --accent:#4FBE94;
+  --accent-soft:#1E2E27;
+  --amber:#E3AC4C;
+  --amber-soft:#2E2717;
+  --danger:#E17368;
+  --danger-soft:#301E1C;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background .2s ease, color .2s ease;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.display{font-family:'Archivo Black',system-ui,sans-serif;}
+a{color:inherit;}
+button{font-family:inherit;}
+::selection{background:var(--accent);color:#fff;}
+
+/* ---------- layout shell ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
+header.top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0 18px;border-bottom:3px solid var(--line-strong);
+  flex-wrap:wrap;gap:14px;
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand h1{
+  font-family:'Archivo Black',sans-serif;
+  font-size:26px;letter-spacing:-0.5px;margin:0;
+}
+.brand .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:0.08em;
+}
+nav.tabs{display:flex;gap:4px;background:var(--bg-soft);padding:4px;border-radius:999px;}
+nav.tabs button{
+  border:none;background:transparent;color:var(--ink-soft);
+  padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:.15s;white-space:nowrap;
+}
+nav.tabs button.active{background:var(--ink);color:var(--bg);}
+[data-theme="dark"] nav.tabs button.active{background:var(--accent);color:#0d130f;}
+
+.iconbtn{
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  width:38px;height:38px;border-radius:999px;cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+.view{display:none;padding-top:26px;}
+.view.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.grid-today{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:start;}
+@media (max-width:860px){.grid-today{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;
+}
+.panel h2{
+  font-size:12px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--ink-soft);margin:0 0 14px;font-weight:700;
+}
+
+/* date bar */
+.datebar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.datebar button{
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  width:32px;height:32px;border-radius:999px;cursor:pointer;
+}
+.datebar .cur{font-weight:700;font-size:15px;flex:1;text-align:center;}
+.datebar .cur small{display:block;font-weight:400;color:var(--ink-soft);font-size:11px;
+  font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+
+/* search / add food */
+.search-box{position:relative;margin-bottom:16px;}
+.search-row{display:flex;gap:8px;}
+.search-row input[type="text"]{
+  flex:1;padding:11px 13px;border:1.5px solid var(--line-strong);border-radius:2px;
+  background:var(--bg);color:var(--ink);font-size:14px;font-family:'Inter';
+}
+.search-row input[type="text"]:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.qty-input{
+  width:76px;padding:11px 8px;border:1.5px solid var(--line-strong);border-radius:2px;
+  background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono';font-size:14px;text-align:center;
+}
+.btn{
+  border:none;background:var(--ink);color:var(--bg);padding:0 18px;border-radius:2px;
+  font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.02em;
+}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.accent{background:var(--accent);color:#fff;}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line-strong);}
+.btn.small{padding:6px 12px;font-size:12px;}
+
+.suggestions{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);
+  border:1.5px solid var(--line-strong);max-height:320px;overflow-y:auto;z-index:20;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.suggestions .sug-item{
+  padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:10px;font-size:13.5px;
+}
+.suggestions .sug-item:hover, .suggestions .sug-item.hl{background:var(--accent-soft);}
+.suggestions .sug-item .nm{flex:1;}
+.suggestions .sug-item .cat{color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;
+  font-family:'IBM Plex Mono';letter-spacing:.05em;}
+.suggestions .sug-item .kc{font-family:'IBM Plex Mono';color:var(--ink-soft);font-size:12px;white-space:nowrap;}
+.suggestions .empty{padding:14px;color:var(--ink-soft);font-size:13px;}
+.suggestions .addcustom{padding:10px 13px;color:var(--accent);font-weight:600;cursor:pointer;font-size:13px;}
+
+.selected-bar{
+  display:flex;align-items:center;gap:10px;margin-top:8px;padding:9px 10px 9px 14px;
+  background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:2px;
+}
+.selected-bar .sb-info{flex:1;min-width:0;display:flex;flex-direction:column;}
+.selected-bar .sb-name{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.selected-bar .sb-kcal{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
+.selected-bar .iconbtn{width:26px;height:26px;font-size:14px;border:none;background:transparent;}
+
+/* food log table */
+table.log{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.log th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--ink-soft);padding:0 6px 8px;border-bottom:2px solid var(--line-strong);font-weight:700;
+}
+table.log td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.log td.num{font-family:'IBM Plex Mono';text-align:right;white-space:nowrap;}
+table.log tr:last-child td{border-bottom:none;}
+.rm-btn{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;}
+.rm-btn:hover{color:var(--danger);}
+.empty-state{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+/* nutrition label card - signature element */
+.label-card{
+  border:3px solid var(--line-strong);border-radius:2px;padding:16px 18px;background:var(--panel);
+}
+.label-card .lc-title{
+  font-family:'Archivo Black';font-size:20px;letter-spacing:-.3px;margin:0 0 2px;
+}
+.label-card .lc-sub{font-size:11px;color:var(--ink-soft);font-family:'IBM Plex Mono';
+  text-transform:uppercase;letter-spacing:.05em;}
+.rule-thick{border:none;border-top:9px solid var(--line-strong);margin:10px 0 8px;}
+.rule{border:none;border-top:1px solid var(--line);margin:7px 0;}
+.rule-mid{border:none;border-top:5px solid var(--line-strong);margin:9px 0 6px;}
+.kcal-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 2px;}
+.kcal-row .k-label{font-size:16px;font-weight:800;}
+.kcal-row .k-val{font-family:'Archivo Black';font-size:34px;}
+.kcal-row .k-val small{font-family:'Inter';font-size:14px;font-weight:600;color:var(--ink-soft);}
+.vd-head{display:flex;justify-content:flex-end;font-size:10px;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono';padding:2px 0;}
+.nutrow{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line);}
+.nutrow:last-child{border-bottom:none;}
+.nutrow .nm{font-weight:600;}
+.nutrow .vv{font-family:'IBM Plex Mono';display:flex;gap:14px;}
+.nutrow .vv .vd{color:var(--ink-soft);min-width:42px;text-align:right;}
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
+  font-size:12px;font-weight:700;margin-top:12px;
+}
+.status-pill.ok{background:var(--accent-soft);color:var(--accent);}
+.status-pill.warn{background:var(--amber-soft);color:var(--amber);}
+.status-pill.over{background:var(--danger-soft);color:var(--danger);}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+.meta-edit-row{display:flex;gap:8px;align-items:center;margin-top:14px;}
+.meta-edit-row input{
+  width:90px;padding:8px 10px;border:1.5px solid var(--line-strong);border-radius:2px;
+  background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;text-align:center;
+}
+
+/* week view */
+.week-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+@media (max-width:760px){.week-summary{grid-template-columns:repeat(2,1fr);}}
+.stat-card{border:1px solid var(--line);border-radius:2px;padding:16px;background:var(--panel);}
+.stat-card .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+  font-family:'IBM Plex Mono';margin-bottom:8px;}
+.stat-card .val{font-family:'Archivo Black';font-size:24px;}
+.stat-card .val.pos{color:var(--accent);}
+.stat-card .val.neg{color:var(--danger);}
+.stat-card .sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+
+.chart-wrap{margin-bottom:22px;}
+.bars{display:flex;align-items:flex-end;gap:10px;height:220px;padding:10px 4px 0;position:relative;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;}
+.bar-track{width:100%;max-width:44px;height:100%;display:flex;align-items:flex-end;position:relative;}
+.bar-fill{width:100%;border-radius:2px 2px 0 0;transition:height .4s ease;position:relative;}
+.bar-fill.under{background:var(--accent);}
+.bar-fill.over{background:var(--danger);}
+.bar-goal-line{position:absolute;left:-6px;right:-6px;border-top:2px dashed var(--ink-soft);}
+.bar-col .day-lbl{font-size:11px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono';}
+.bar-col .day-val{font-size:10.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';margin-top:2px;}
+
+.week-table{width:100%;border-collapse:collapse;font-size:13px;}
+.week-table th{text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);
+  padding:0 8px 8px;border-bottom:2px solid var(--line-strong);font-family:'IBM Plex Mono';}
+.week-table td{padding:9px 8px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono';font-size:13px;}
+.week-table td.pos{color:var(--accent);font-weight:700;}
+.week-table td.neg{color:var(--danger);font-weight:700;}
+
+/* config view */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+@media (max-width:860px){.cfg-grid{grid-template-columns:1fr;}}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+.field input, .field select{
+  width:100%;padding:10px 11px;border:1.5px solid var(--line-strong);border-radius:2px;
+  background:var(--bg);color:var(--ink);font-size:14px;font-family:'Inter';
+}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.radio-row{display:flex;gap:16px;margin-bottom:14px;}
+.radio-row label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:500;cursor:pointer;}
+.divider-lbl{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
+  margin:18px 0 10px;font-family:'IBM Plex Mono';border-top:1px solid var(--line);padding-top:14px;}
+.help{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
+.export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+input[type=file]{display:none;}
+
+footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-size:11.5px;font-family:'IBM Plex Mono';}
+
+/* meal sections */
+.meal-select{
+  padding:11px 8px;border:1.5px solid var(--line-strong);border-radius:2px;
+  background:var(--bg);color:var(--ink);font-family:'Inter';font-size:13px;max-width:150px;
+}
+.meal-block{margin-bottom:18px;}
+.meal-block:last-child{margin-bottom:0;}
+.meal-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--line-strong);padding-bottom:6px;margin-bottom:2px;
+}
+.meal-head .mh-name{font-weight:800;font-size:14px;}
+.meal-head .mh-sub{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-soft);}
+.meals-empty{padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+/* meal chips - config */
+.meal-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px;}
+.meal-chip{
+  display:flex;align-items:center;gap:7px;background:var(--bg-soft);border:1px solid var(--line);
+  border-radius:999px;padding:6px 8px 6px 14px;font-size:12.5px;font-weight:600;
+}
+.meal-chip button{
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+  width:18px;height:18px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;
+}
+.meal-chip button:hover{color:var(--danger);background:var(--danger-soft);}
+.add-meal-row{display:flex;gap:8px;}
+.add-meal-row input{flex:1;}
+
+/* calculadora tab */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+@media (max-width:860px){.calc-grid{grid-template-columns:1fr;}}
+.objetivo-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
+@media (max-width:520px){.objetivo-cards{grid-template-columns:1fr;}}
+.obj-card{
+  border:1.5px solid var(--line);border-radius:2px;padding:10px 12px;cursor:pointer;
+  font-size:13px;transition:.15s;
+}
+.obj-card:hover{border-color:var(--line-strong);}
+.obj-card.sel{border-color:var(--accent);background:var(--accent-soft);}
+.obj-card .oc-name{font-weight:700;display:block;}
+.obj-card .oc-sub{color:var(--ink-soft);font-size:11.5px;font-family:'IBM Plex Mono';}
+.result-card{border:3px solid var(--line-strong);border-radius:2px;padding:18px;}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);}
+.result-row:last-child{border-bottom:none;}
+.result-row .r-lbl{font-size:13px;color:var(--ink-soft);}
+.result-row .r-val{font-family:'Archivo Black';font-size:22px;}
+.result-row.hero{border-bottom:2px solid var(--line-strong);margin-bottom:4px;padding-bottom:14px;}
+.result-row.hero .r-val{font-size:36px;color:var(--accent);}
+.calc-applied-note{font-size:12px;color:var(--ink-soft);margin-top:12px;font-weight:600;line-height:1.5;}
+.calc-applied-note.live{color:var(--accent);}
+
+.link-btn{
+  border:none;background:transparent;color:var(--accent);cursor:pointer;
+  font-size:12px;font-weight:700;text-decoration:underline;padding:0;font-family:'Inter';
+}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,12,10,0.55);display:flex;align-items:center;
+  justify-content:center;z-index:200;padding:20px;
+}
+.modal-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:2px;
+  padding:22px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.modal-head h3{margin:0;font-size:16px;font-family:'Archivo Black';font-weight:400;letter-spacing:-.2px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:10px;}
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Balanço</h1>
+      <span class="tag">registro calórico · base TACO</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-view="hoje">Hoje</button>
+      <button class="tab-btn" data-view="semana">Semana</button>
+      <button class="tab-btn" data-view="calc">Calculadora</button>
+      <button class="tab-btn" data-view="config">Config</button>
+    </nav>
+    <button class="iconbtn" id="themeToggle" title="Alternar tema">🌙</button>
+  </header>
+
+  <!-- ===================== HOJE ===================== -->
+  <section class="view active" id="view-hoje">
+    <div class="grid-today">
+      <div>
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="datebar">
+            <button id="dayPrev">‹</button>
+            <div class="cur"><span id="dayLabel">Hoje</span><small id="dayDate">--</small></div>
+            <button id="dayNext">›</button>
+          </div>
+          <div class="search-box">
+            <div class="search-row">
+              <input type="text" id="foodSearch" placeholder="Buscar por palavra-chave (ex: frango grelhado, arroz, feijão)…" autocomplete="off">
+              <input type="number" id="qtyInput" class="qty-input" value="100" min="1" step="1">
+              <select class="meal-select" id="mealSelect"></select>
+            </div>
+            <div class="selected-bar" id="selectedBar" style="display:none;">
+              <span class="sb-info"><span class="sb-name" id="selectedFoodName"></span><span class="sb-kcal" id="selectedFoodKcal"></span></span>
+              <button class="btn accent small" id="confirmAddBtn">Adicionar</button>
+              <button class="iconbtn" id="cancelSelectBtn" title="Cancelar">×</button>
+            </div>
+            <div class="help" id="searchHelp" style="margin-top:6px;">Busque e clique em um alimento para selecioná-lo, ajuste a quantidade e confirme. <button class="link-btn" id="newFoodBtn" type="button">+ Cadastrar alimento personalizado</button></div>
+            <div class="suggestions" id="suggBox" style="display:none;"></div>
+          </div>
+          <div id="mealsContainer"></div>
+          <div id="logEmpty" class="empty-state" style="display:none;">Nenhum alimento registrado neste dia. Busque acima para começar.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="label-card">
+          <p class="lc-title">Resumo do dia</p>
+          <p class="lc-sub" id="labelDate">--</p>
+          <hr class="rule-thick">
+          <div class="kcal-row">
+            <span class="k-label">Calorias</span>
+            <span class="k-val"><span id="kcalTotal">0</span> <small>/ <span id="kcalGoalShown">2000</span> kcal</small></span>
+          </div>
+          <hr class="rule-mid">
+          <div class="vd-head">% da meta</div>
+          <div class="nutrow"><span class="nm">Proteína</span><span class="vv"><span id="pTotal">0</span> g<span class="vd" id="pVd">0%</span></span></div>
+          <div class="nutrow"><span class="nm">Carboidrato</span><span class="vv"><span id="cTotal">0</span> g<span class="vd" id="cVd">0%</span></span></div>
+          <div class="nutrow"><span class="nm">Gordura</span><span class="vv"><span id="fTotal">0</span> g<span class="vd" id="fVd">0%</span></span></div>
+          <div class="nutrow"><span class="nm">Fibra</span><span class="vv"><span id="fbTotal">0</span> g<span class="vd"></span></span></div>
+          <div class="nutrow"><span class="nm">Sódio</span><span class="vv"><span id="naTotal">0</span> mg<span class="vd"></span></span></div>
+          <hr class="rule">
+          <div id="statusPill" class="status-pill ok"><span class="dot"></span><span id="statusText">Dentro da meta</span></div>
+          <div class="meta-edit-row">
+            <span style="font-size:12px;color:var(--ink-soft);">Meta rápida:</span>
+            <input type="number" id="quickGoal" step="10">
+            <button class="btn ghost small" id="quickGoalSave">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SEMANA ===================== -->
+  <section class="view" id="view-semana">
+    <div class="week-summary">
+      <div class="stat-card"><div class="lbl">Saldo da semana</div><div class="val" id="wkBalance">0</div><div class="sub">kcal acumuladas vs. meta</div></div>
+      <div class="stat-card"><div class="lbl">Média diária</div><div class="val" id="wkAvg">0</div><div class="sub">kcal / dia registrado</div></div>
+      <div class="stat-card"><div class="lbl">Dias no déficit</div><div class="val pos" id="wkUnder">0</div><div class="sub">de <span id="wkLoggedDays">0</span> dias com registro</div></div>
+      <div class="stat-card"><div class="lbl">Dias no superávit</div><div class="val neg" id="wkOver">0</div><div class="sub">acima da meta diária</div></div>
+    </div>
+
+    <div class="panel chart-wrap">
+      <h2>Consumo vs. meta — últimos 7 dias</h2>
+      <div class="bars" id="barsWrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Detalhamento diário</h2>
+      <table class="week-table">
+        <thead><tr><th>Dia</th><th>Kcal</th><th>Meta</th><th>Saldo</th></tr></thead>
+        <tbody id="wkTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== CALCULADORA ===================== -->
+  <section class="view" id="view-calc">
+    <div class="calc-grid">
+      <div class="panel">
+        <h2>Seus dados</h2>
+        <div class="field-row">
+          <div class="field"><label>Sexo</label>
+            <select id="calcSex"><option value="f">Feminino</option><option value="m">Masculino</option></select>
+          </div>
+          <div class="field"><label>Idade (anos)</label><input type="number" id="calcAge" min="10" max="100"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Peso (kg)</label><input type="number" id="calcWeight" step="0.1"></div>
+          <div class="field"><label>Altura (cm)</label><input type="number" id="calcHeight" step="0.5"></div>
+        </div>
+        <div class="field">
+          <label>Nível de atividade</label>
+          <select id="calcActivity">
+            <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+            <option value="1.375">Leve (exercício 1–3x/semana)</option>
+            <option value="1.55">Moderado (exercício 3–5x/semana)</option>
+            <option value="1.725">Alto (exercício 6–7x/semana)</option>
+            <option value="1.9">Muito alto (atleta / trabalho físico)</option>
+          </select>
+        </div>
+        <h2 style="margin-top:20px;">Objetivo</h2>
+        <div class="objetivo-cards" id="objetivoCards">
+          <div class="obj-card" data-val="-500"><span class="oc-name">Perda de peso</span><span class="oc-sub">déficit acentuado · -500 kcal</span></div>
+          <div class="obj-card" data-val="-250"><span class="oc-name">Perda de peso leve</span><span class="oc-sub">déficit moderado · -250 kcal</span></div>
+          <div class="obj-card" data-val="0"><span class="oc-name">Manter peso</span><span class="oc-sub">sem ajuste · 0 kcal</span></div>
+          <div class="obj-card" data-val="250"><span class="oc-name">Ganho de massa leve</span><span class="oc-sub">superávit moderado · +250 kcal</span></div>
+          <div class="obj-card" data-val="500"><span class="oc-name">Ganho de massa</span><span class="oc-sub">superávit acentuado · +500 kcal</span></div>
+        </div>
+        <div class="help">TMB pelo método Mifflin-St Jeor. GET = TMB × fator de atividade. A meta final soma o ajuste do objetivo escolhido ao GET.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Resultado</h2>
+        <div class="result-card">
+          <div class="result-row"><span class="r-lbl">TMB (taxa metabólica basal)</span><span class="r-val" id="resTMB">—</span></div>
+          <div class="result-row"><span class="r-lbl">GET (gasto energético total)</span><span class="r-val" id="resGET">—</span></div>
+          <div class="result-row hero"><span class="r-lbl">Meta sugerida para o objetivo</span><span class="r-val" id="resMeta">—</span></div>
+          <div class="calc-applied-note" id="calcAppliedNote" style="display:block;">Esta meta é aplicada automaticamente como sua meta diária ao ajustar qualquer campo aqui.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONFIG ===================== -->
+  <section class="view" id="view-config">
+    <div class="cfg-grid">
+      <div class="panel">
+        <h2>Meta calórica diária</h2>
+        <div class="field">
+          <label>Meta de calorias (kcal/dia)</label>
+          <input type="number" id="manualGoalInput" step="10" placeholder="ex: 2000">
+        </div>
+        <button class="btn accent" id="saveGoalBtn">Salvar meta</button>
+        <div class="help">Prefere calcular a partir do seu peso, altura e objetivo? Use a aba <strong>Calculadora</strong> — o resultado de lá pode ser aplicado direto aqui como sua meta diária.</div>
+
+        <div class="divider-lbl">Refeições</div>
+        <p class="help">Defina quais refeições aparecem para escolher ao adicionar um alimento. Você decide quantas e quais usar.</p>
+        <div class="meal-chips" id="mealChips"></div>
+        <div class="add-meal-row">
+          <input type="text" id="newMealInput" placeholder="Nova refeição (ex: Ceia)">
+          <button class="btn ghost small" id="addMealBtn">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Aparência</h2>
+        <div class="field">
+          <label>Tema</label>
+          <select id="themeSelect"><option value="light">Claro</option><option value="dark">Escuro</option></select>
+        </div>
+
+        <div class="divider-lbl">Dados</div>
+        <p class="help">Todos os registros ficam salvos apenas neste navegador (localStorage). Exporte periodicamente para não perder o histórico.</p>
+        <div class="export-row">
+          <button class="btn ghost small" id="exportBtn">Exportar JSON</button>
+          <button class="btn ghost small" id="importBtn">Importar JSON</button>
+          <input type="file" id="importFile" accept="application/json">
+          <button class="btn ghost small" id="clearBtn" style="border-color:var(--danger);color:var(--danger);">Apagar tudo</button>
+        </div>
+
+        <div class="divider-lbl">Sobre a base de dados</div>
+        <p class="help">Valores nutricionais por 100 g de parte comestível, a partir da Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição — NEPA/UNICAMP. Alimentos personalizados adicionados por você ficam salvos localmente e aparecem junto nas buscas.</p>
+
+        <div class="divider-lbl">Meus alimentos personalizados</div>
+        <div class="meal-chips" id="customFoodChips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MODAL: NOVO ALIMENTO PERSONALIZADO ===================== -->
+  <div class="modal-overlay" id="foodModalOverlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Novo alimento personalizado</h3>
+        <button class="iconbtn" id="closeFoodModal" type="button">×</button>
+      </div>
+      <div class="field"><label>Nome do alimento</label><input type="text" id="nfName" placeholder="ex: Vitamina de banana caseira"></div>
+      <div class="field"><label>Categoria (opcional)</label><input type="text" id="nfCat" placeholder="Personalizado"></div>
+      <div class="field-row">
+        <div class="field"><label>Calorias (kcal/100g)</label><input type="number" id="nfKcal" step="0.1" placeholder="0"></div>
+        <div class="field"><label>Proteína (g/100g)</label><input type="number" id="nfP" step="0.1" placeholder="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Carboidrato (g/100g)</label><input type="number" id="nfC" step="0.1" placeholder="0"></div>
+        <div class="field"><label>Gordura (g/100g)</label><input type="number" id="nfF" step="0.1" placeholder="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fibra (g/100g, opcional)</label><input type="number" id="nfFb" step="0.1" placeholder="0"></div>
+        <div class="field"><label>Sódio (mg/100g, opcional)</label><input type="number" id="nfNa" step="1" placeholder="0"></div>
+      </div>
+      <div class="help">Os valores devem ser por 100 g do alimento — o app faz a conversão pela quantidade que você lançar no dia.</div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelFoodModal" type="button">Cancelar</button>
+        <button class="btn accent" id="saveFoodModal" type="button">Salvar e selecionar</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">Dados nutricionais: TACO 4ª ed. (NEPA/UNICAMP) · Tudo salvo localmente no seu navegador</footer>
+</div>
+
+<script>
+const TACO_DATA = [{"id":1,"n":"Arroz, integral, cozido","kcal":123.5,"p":2.6,"c":25.8,"f":1.0,"fb":2.7,"na":1.2,"cat":"Cereais e derivados"},{"id":2,"n":"Arroz, integral, cru","kcal":359.7,"p":7.3,"c":77.5,"f":1.9,"fb":4.8,"na":1.6,"cat":"Cereais e derivados"},{"id":3,"n":"Arroz, tipo 1, cozido","kcal":128.3,"p":2.5,"c":28.1,"f":0.2,"fb":1.6,"na":1.2,"cat":"Cereais e derivados"},{"id":4,"n":"Arroz, tipo 1, cru","kcal":357.8,"p":7.2,"c":78.8,"f":0.3,"fb":1.6,"na":1.0,"cat":"Cereais e derivados"},{"id":5,"n":"Arroz, tipo 2, cozido","kcal":130.1,"p":2.6,"c":28.2,"f":0.4,"fb":1.1,"na":2.0,"cat":"Cereais e derivados"},{"id":6,"n":"Arroz, tipo 2, cru","kcal":358.1,"p":7.2,"c":78.9,"f":0.3,"fb":1.7,"na":0.6,"cat":"Cereais e derivados"},{"id":7,"n":"Aveia, flocos, crua","kcal":393.8,"p":13.9,"c":66.6,"f":8.5,"fb":9.1,"na":4.6,"cat":"Cereais e derivados"},{"id":8,"n":"Biscoito, doce, maisena","kcal":442.8,"p":8.1,"c":75.2,"f":12.0,"fb":2.1,"na":352.0,"cat":"Cereais e derivados"},{"id":9,"n":"Biscoito, doce, recheado com chocolate","kcal":471.8,"p":6.4,"c":70.5,"f":19.6,"fb":3.0,"na":239.2,"cat":"Cereais e derivados"},{"id":10,"n":"Biscoito, doce, recheado com morango","kcal":471.2,"p":5.7,"c":71.0,"f":19.6,"fb":1.5,"na":229.8,"cat":"Cereais e derivados"},{"id":11,"n":"Biscoito, doce, wafer, recheado de chocolate","kcal":502.5,"p":5.6,"c":67.5,"f":24.7,"fb":1.8,"na":137.2,"cat":"Cereais e derivados"},{"id":12,"n":"Biscoito, doce, wafer, recheado de morango","kcal":513.4,"p":4.5,"c":67.4,"f":26.4,"fb":0.8,"na":119.9,"cat":"Cereais e derivados"},{"id":13,"n":"Biscoito, salgado, cream cracker","kcal":431.7,"p":10.1,"c":68.7,"f":14.4,"fb":2.5,"na":854.4,"cat":"Cereais e derivados"},{"id":14,"n":"Bolo, mistura para","kcal":418.6,"p":6.2,"c":84.7,"f":6.1,"fb":1.7,"na":462.9,"cat":"Cereais e derivados"},{"id":15,"n":"Bolo, pronto, aipim","kcal":323.9,"p":4.4,"c":47.9,"f":12.7,"fb":0.7,"na":111.0,"cat":"Cereais e derivados"},{"id":16,"n":"Bolo, pronto, chocolate","kcal":410.0,"p":6.2,"c":54.7,"f":18.5,"fb":1.4,"na":283.3,"cat":"Cereais e derivados"},{"id":17,"n":"Bolo, pronto, coco","kcal":333.4,"p":5.7,"c":52.3,"f":11.3,"fb":1.1,"na":190.3,"cat":"Cereais e derivados"},{"id":18,"n":"Bolo, pronto, milho","kcal":311.4,"p":4.8,"c":45.1,"f":12.4,"fb":0.7,"na":133.8,"cat":"Cereais e derivados"},{"id":19,"n":"Canjica, branca, crua","kcal":357.6,"p":7.2,"c":78.1,"f":1.0,"fb":5.5,"na":0.8,"cat":"Cereais e derivados"},{"id":20,"n":"Canjica, com leite integral","kcal":112.5,"p":2.4,"c":23.6,"f":1.2,"fb":1.2,"na":27.6,"cat":"Cereais e derivados"},{"id":21,"n":"Cereais, milho, flocos, com sal","kcal":369.6,"p":7.3,"c":80.8,"f":1.6,"fb":5.3,"na":271.7,"cat":"Cereais e derivados"},{"id":22,"n":"Cereais, milho, flocos, sem sal","kcal":363.3,"p":6.9,"c":80.4,"f":1.2,"fb":1.8,"na":31.0,"cat":"Cereais e derivados"},{"id":23,"n":"Cereais, mingau, milho, infantil","kcal":394.4,"p":6.4,"c":87.3,"f":1.1,"fb":3.2,"na":399.4,"cat":"Cereais e derivados"},{"id":24,"n":"Cereais, mistura para vitamina, trigo, cevada e aveia","kcal":381.1,"p":8.9,"c":81.6,"f":2.1,"fb":5.0,"na":1163.3,"cat":"Cereais e derivados"},{"id":25,"n":"Cereal matinal, milho","kcal":365.4,"p":7.2,"c":83.8,"f":1.0,"fb":4.1,"na":654.5,"cat":"Cereais e derivados"},{"id":26,"n":"Cereal matinal, milho, açúcar","kcal":376.6,"p":4.7,"c":88.8,"f":0.7,"fb":2.1,"na":405.3,"cat":"Cereais e derivados"},{"id":27,"n":"Creme de arroz, pó","kcal":386.0,"p":7.0,"c":83.9,"f":1.2,"fb":1.1,"na":1.0,"cat":"Cereais e derivados"},{"id":28,"n":"Creme de milho, pó","kcal":333.0,"p":4.8,"c":86.1,"f":1.6,"fb":3.7,"na":593.8,"cat":"Cereais e derivados"},{"id":29,"n":"Curau, milho verde","kcal":78.4,"p":2.4,"c":13.9,"f":1.6,"fb":0.5,"na":20.5,"cat":"Cereais e derivados"},{"id":30,"n":"Curau, milho verde, mistura para","kcal":402.3,"p":2.2,"c":79.8,"f":13.4,"fb":2.5,"na":222.9,"cat":"Cereais e derivados"},{"id":31,"n":"Farinha, de arroz, enriquecida","kcal":363.1,"p":1.3,"c":85.5,"f":0.3,"fb":0.6,"na":17.1,"cat":"Cereais e derivados"},{"id":32,"n":"Farinha, de centeio, integral","kcal":335.8,"p":12.5,"c":73.3,"f":1.8,"fb":15.5,"na":41.4,"cat":"Cereais e derivados"},{"id":33,"n":"Farinha, de milho, amarela","kcal":350.6,"p":7.2,"c":79.1,"f":1.5,"fb":5.5,"na":44.9,"cat":"Cereais e derivados"},{"id":34,"n":"Farinha, de rosca","kcal":370.6,"p":11.4,"c":75.8,"f":1.5,"fb":4.8,"na":332.5,"cat":"Cereais e derivados"},{"id":35,"n":"Farinha, de trigo","kcal":360.5,"p":9.8,"c":75.1,"f":1.4,"fb":2.3,"na":0.7,"cat":"Cereais e derivados"},{"id":36,"n":"Farinha, láctea, de cereais","kcal":414.9,"p":11.9,"c":77.8,"f":5.8,"fb":1.9,"na":125.1,"cat":"Cereais e derivados"},{"id":37,"n":"Lasanha, massa fresca, cozida","kcal":163.8,"p":5.8,"c":32.5,"f":1.2,"fb":1.6,"na":206.8,"cat":"Cereais e derivados"},{"id":38,"n":"Lasanha, massa fresca, crua","kcal":220.3,"p":7.0,"c":45.1,"f":1.3,"fb":1.6,"na":666.7,"cat":"Cereais e derivados"},{"id":39,"n":"Macarrão, instantâneo","kcal":435.9,"p":8.8,"c":62.4,"f":17.2,"fb":5.6,"na":1515.5,"cat":"Cereais e derivados"},{"id":40,"n":"Macarrão, trigo, cru","kcal":371.1,"p":10.0,"c":77.9,"f":1.3,"fb":2.9,"na":7.2,"cat":"Cereais e derivados"},{"id":41,"n":"Macarrão, trigo, cru, com ovos","kcal":370.6,"p":10.3,"c":76.6,"f":2.0,"fb":2.3,"na":14.7,"cat":"Cereais e derivados"},{"id":42,"n":"Milho, amido, cru","kcal":361.4,"p":0.6,"c":87.1,"f":0.0,"fb":0.7,"na":8.1,"cat":"Cereais e derivados"},{"id":43,"n":"Milho, fubá, cru","kcal":353.5,"p":7.2,"c":78.9,"f":1.9,"fb":4.7,"na":0.0,"cat":"Cereais e derivados"},{"id":44,"n":"Milho, verde, cru","kcal":138.2,"p":6.6,"c":28.6,"f":0.6,"fb":3.9,"na":1.1,"cat":"Cereais e derivados"},{"id":45,"n":"Milho, verde, enlatado, drenado","kcal":97.6,"p":3.2,"c":17.1,"f":2.4,"fb":4.6,"na":260.3,"cat":"Cereais e derivados"},{"id":46,"n":"Mingau tradicional, pó","kcal":373.4,"p":0.6,"c":89.3,"f":0.4,"fb":0.9,"na":14.9,"cat":"Cereais e derivados"},{"id":47,"n":"Pamonha, barra para cozimento, pré-cozida","kcal":171.2,"p":2.6,"c":30.7,"f":4.8,"fb":2.4,"na":132.0,"cat":"Cereais e derivados"},{"id":48,"n":"Pão, aveia, forma","kcal":343.1,"p":12.3,"c":59.6,"f":5.7,"fb":6.0,"na":605.8,"cat":"Cereais e derivados"},{"id":49,"n":"Pão, de soja","kcal":308.7,"p":11.3,"c":56.5,"f":3.6,"fb":5.7,"na":662.5,"cat":"Cereais e derivados"},{"id":50,"n":"Pão, glúten, forma","kcal":253.0,"p":12.0,"c":44.1,"f":2.7,"fb":2.5,"na":22.0,"cat":"Cereais e derivados"},{"id":51,"n":"Pão, milho, forma","kcal":292.0,"p":8.3,"c":56.4,"f":3.1,"fb":4.3,"na":506.6,"cat":"Cereais e derivados"},{"id":52,"n":"Pão, trigo, forma, integral","kcal":253.2,"p":9.4,"c":49.9,"f":3.7,"fb":6.9,"na":506.1,"cat":"Cereais e derivados"},{"id":53,"n":"Pão, trigo, francês","kcal":299.8,"p":8.0,"c":58.6,"f":3.1,"fb":2.3,"na":647.7,"cat":"Cereais e derivados"},{"id":54,"n":"Pão, trigo, sovado","kcal":311.0,"p":8.4,"c":61.5,"f":2.8,"fb":2.4,"na":430.8,"cat":"Cereais e derivados"},{"id":55,"n":"Pastel, de carne, cru","kcal":288.7,"p":10.7,"c":42.0,"f":8.8,"fb":1.0,"na":1309.3,"cat":"Cereais e derivados"},{"id":56,"n":"Pastel, de carne, frito","kcal":388.4,"p":10.1,"c":43.8,"f":20.1,"fb":1.0,"na":1039.9,"cat":"Cereais e derivados"},{"id":57,"n":"Pastel, de queijo, cru","kcal":308.5,"p":9.9,"c":45.9,"f":9.6,"fb":1.1,"na":984.6,"cat":"Cereais e derivados"},{"id":58,"n":"Pastel, de queijo, frito","kcal":422.1,"p":8.7,"c":48.1,"f":22.7,"fb":0.9,"na":821.4,"cat":"Cereais e derivados"},{"id":59,"n":"Pastel, massa, crua","kcal":310.2,"p":6.9,"c":57.4,"f":5.5,"fb":1.4,"na":1344.2,"cat":"Cereais e derivados"},{"id":60,"n":"Pastel, massa, frita","kcal":569.7,"p":6.0,"c":49.3,"f":40.9,"fb":1.3,"na":1174.7,"cat":"Cereais e derivados"},{"id":61,"n":"Pipoca, com óleo de soja, sem sal","kcal":448.3,"p":9.9,"c":70.3,"f":15.9,"fb":14.3,"na":4.3,"cat":"Cereais e derivados"},{"id":62,"n":"Polenta, pré-cozida","kcal":102.7,"p":2.3,"c":23.3,"f":0.3,"fb":2.4,"na":441.9,"cat":"Cereais e derivados"},{"id":63,"n":"Torrada, pão francês","kcal":377.4,"p":10.5,"c":74.6,"f":3.3,"fb":3.4,"na":829.5,"cat":"Cereais e derivados"},{"id":64,"n":"Abóbora, cabotian, cozida","kcal":48.0,"p":1.4,"c":10.8,"f":0.7,"fb":2.5,"na":1.5,"cat":"Verduras, hortaliças e derivados"},{"id":65,"n":"Abóbora, cabotian, crua","kcal":38.6,"p":1.7,"c":8.4,"f":0.5,"fb":2.2,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":66,"n":"Abóbora, menina brasileira, crua","kcal":13.6,"p":0.6,"c":3.3,"f":0.0,"fb":1.2,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":67,"n":"Abóbora, moranga, crua","kcal":12.4,"p":1.0,"c":2.7,"f":0.1,"fb":1.7,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":68,"n":"Abóbora, moranga, refogada","kcal":29.0,"p":0.4,"c":6.0,"f":0.8,"fb":1.5,"na":3.0,"cat":"Verduras, hortaliças e derivados"},{"id":69,"n":"Abóbora, pescoço, crua","kcal":24.5,"p":0.7,"c":6.1,"f":0.1,"fb":2.3,"na":0.7,"cat":"Verduras, hortaliças e derivados"},{"id":70,"n":"Abobrinha, italiana, cozida","kcal":15.0,"p":1.1,"c":3.0,"f":0.2,"fb":1.6,"na":0.8,"cat":"Verduras, hortaliças e derivados"},{"id":71,"n":"Abobrinha, italiana, crua","kcal":19.3,"p":1.1,"c":4.3,"f":0.1,"fb":1.4,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":72,"n":"Abobrinha, italiana, refogada","kcal":24.4,"p":1.1,"c":4.2,"f":0.8,"fb":1.4,"na":2.2,"cat":"Verduras, hortaliças e derivados"},{"id":73,"n":"Abobrinha, paulista, crua","kcal":30.8,"p":0.6,"c":7.9,"f":0.1,"fb":2.6,"na":0.5,"cat":"Verduras, hortaliças e derivados"},{"id":74,"n":"Acelga, crua","kcal":20.9,"p":1.4,"c":4.6,"f":0.1,"fb":1.1,"na":1.2,"cat":"Verduras, hortaliças e derivados"},{"id":75,"n":"Agrião, cru","kcal":16.6,"p":2.7,"c":2.3,"f":0.2,"fb":2.1,"na":7.5,"cat":"Verduras, hortaliças e derivados"},{"id":76,"n":"Aipo, cru","kcal":19.1,"p":0.8,"c":4.3,"f":0.1,"fb":1.0,"na":9.5,"cat":"Verduras, hortaliças e derivados"},{"id":77,"n":"Alface, americana, crua","kcal":8.8,"p":0.6,"c":1.7,"f":0.1,"fb":1.0,"na":7.3,"cat":"Verduras, hortaliças e derivados"},{"id":78,"n":"Alface, crespa, crua","kcal":10.7,"p":1.3,"c":1.7,"f":0.2,"fb":1.8,"na":3.4,"cat":"Verduras, hortaliças e derivados"},{"id":79,"n":"Alface, lisa, crua","kcal":13.8,"p":1.7,"c":2.4,"f":0.1,"fb":2.3,"na":4.2,"cat":"Verduras, hortaliças e derivados"},{"id":80,"n":"Alface, roxa, crua","kcal":12.7,"p":0.9,"c":2.5,"f":0.2,"fb":2.0,"na":7.1,"cat":"Verduras, hortaliças e derivados"},{"id":81,"n":"Alfavaca, crua","kcal":29.2,"p":2.7,"c":5.2,"f":0.5,"fb":4.1,"na":4.6,"cat":"Verduras, hortaliças e derivados"},{"id":82,"n":"Alho, cru","kcal":113.1,"p":7.0,"c":23.9,"f":0.2,"fb":4.3,"na":5.4,"cat":"Verduras, hortaliças e derivados"},{"id":83,"n":"Alho-poró, cru","kcal":31.5,"p":1.4,"c":6.9,"f":0.1,"fb":2.5,"na":1.8,"cat":"Verduras, hortaliças e derivados"},{"id":84,"n":"Almeirão, cru","kcal":18.0,"p":1.8,"c":3.3,"f":0.2,"fb":2.6,"na":2.4,"cat":"Verduras, hortaliças e derivados"},{"id":85,"n":"Almeirão, refogado","kcal":65.1,"p":1.7,"c":5.7,"f":4.8,"fb":3.4,"na":14.5,"cat":"Verduras, hortaliças e derivados"},{"id":86,"n":"Batata, baroa, cozida","kcal":80.1,"p":0.9,"c":18.9,"f":0.2,"fb":1.8,"na":2.1,"cat":"Verduras, hortaliças e derivados"},{"id":87,"n":"Batata, baroa, crua","kcal":101.0,"p":1.0,"c":24.0,"f":0.2,"fb":2.1,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":88,"n":"Batata, doce, cozida","kcal":76.8,"p":0.6,"c":18.4,"f":0.1,"fb":2.2,"na":2.7,"cat":"Verduras, hortaliças e derivados"},{"id":89,"n":"Batata, doce, crua","kcal":118.2,"p":1.3,"c":28.2,"f":0.1,"fb":2.6,"na":8.8,"cat":"Verduras, hortaliças e derivados"},{"id":90,"n":"Batata, frita, tipo chips, industrializada","kcal":542.7,"p":5.6,"c":51.2,"f":36.6,"fb":2.5,"na":607.4,"cat":"Verduras, hortaliças e derivados"},{"id":91,"n":"Batata, inglesa, cozida","kcal":51.6,"p":1.2,"c":11.9,"f":0.0,"fb":1.3,"na":2.3,"cat":"Verduras, hortaliças e derivados"},{"id":92,"n":"Batata, inglesa, crua","kcal":64.4,"p":1.8,"c":14.7,"f":0.0,"fb":1.2,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":93,"n":"Batata, inglesa, frita","kcal":267.2,"p":5.0,"c":35.6,"f":13.1,"fb":8.1,"na":1.9,"cat":"Verduras, hortaliças e derivados"},{"id":94,"n":"Batata, inglesa, sauté","kcal":67.9,"p":1.3,"c":14.1,"f":0.9,"fb":1.4,"na":8.2,"cat":"Verduras, hortaliças e derivados"},{"id":95,"n":"Berinjela, cozida","kcal":18.8,"p":0.7,"c":4.5,"f":0.1,"fb":2.5,"na":1.3,"cat":"Verduras, hortaliças e derivados"},{"id":96,"n":"Berinjela, crua","kcal":19.6,"p":1.2,"c":4.4,"f":0.1,"fb":2.9,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":97,"n":"Beterraba, cozida","kcal":32.2,"p":1.3,"c":7.2,"f":0.1,"fb":1.9,"na":22.8,"cat":"Verduras, hortaliças e derivados"},{"id":98,"n":"Beterraba, crua","kcal":48.8,"p":1.9,"c":11.1,"f":0.1,"fb":3.4,"na":9.7,"cat":"Verduras, hortaliças e derivados"},{"id":99,"n":"Biscoito, polvilho doce","kcal":437.5,"p":1.3,"c":80.5,"f":12.2,"fb":1.2,"na":97.8,"cat":"Verduras, hortaliças e derivados"},{"id":100,"n":"Brócolis, cozido","kcal":24.6,"p":2.1,"c":4.4,"f":0.5,"fb":3.4,"na":2.1,"cat":"Verduras, hortaliças e derivados"},{"id":101,"n":"Brócolis, cru","kcal":25.5,"p":3.6,"c":4.0,"f":0.3,"fb":2.9,"na":3.3,"cat":"Verduras, hortaliças e derivados"},{"id":102,"n":"Cará, cozido","kcal":77.6,"p":1.5,"c":18.9,"f":0.1,"fb":2.6,"na":1.0,"cat":"Verduras, hortaliças e derivados"},{"id":103,"n":"Cará, cru","kcal":95.6,"p":2.3,"c":23.0,"f":0.1,"fb":7.3,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":104,"n":"Caruru, cru","kcal":34.0,"p":3.2,"c":6.0,"f":0.6,"fb":4.5,"na":13.7,"cat":"Verduras, hortaliças e derivados"},{"id":105,"n":"Catalonha, crua","kcal":23.9,"p":1.9,"c":4.8,"f":0.3,"fb":2.0,"na":9.4,"cat":"Verduras, hortaliças e derivados"},{"id":106,"n":"Catalonha, refogada","kcal":63.4,"p":1.9,"c":4.8,"f":4.8,"fb":3.6,"na":24.7,"cat":"Verduras, hortaliças e derivados"},{"id":107,"n":"Cebola, crua","kcal":39.4,"p":1.7,"c":8.9,"f":0.1,"fb":2.2,"na":0.6,"cat":"Verduras, hortaliças e derivados"},{"id":108,"n":"Cebolinha, crua","kcal":19.5,"p":1.9,"c":3.4,"f":0.3,"fb":3.5,"na":1.6,"cat":"Verduras, hortaliças e derivados"},{"id":109,"n":"Cenoura, cozida","kcal":29.9,"p":0.8,"c":6.7,"f":0.2,"fb":2.6,"na":7.9,"cat":"Verduras, hortaliças e derivados"},{"id":110,"n":"Cenoura, crua","kcal":34.1,"p":1.3,"c":7.7,"f":0.2,"fb":3.2,"na":3.3,"cat":"Verduras, hortaliças e derivados"},{"id":111,"n":"Chicória, crua","kcal":13.8,"p":1.1,"c":2.9,"f":0.1,"fb":2.2,"na":13.5,"cat":"Verduras, hortaliças e derivados"},{"id":112,"n":"Chuchu, cozido","kcal":18.5,"p":0.4,"c":4.8,"f":0.0,"fb":1.0,"na":1.8,"cat":"Verduras, hortaliças e derivados"},{"id":113,"n":"Chuchu, cru","kcal":17.0,"p":0.7,"c":4.1,"f":0.1,"fb":1.3,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":114,"n":"Coentro, folhas desidratadas","kcal":309.1,"p":20.9,"c":48.0,"f":10.4,"fb":37.3,"na":18.3,"cat":"Verduras, hortaliças e derivados"},{"id":115,"n":"Couve, manteiga, crua","kcal":27.1,"p":2.9,"c":4.3,"f":0.5,"fb":3.1,"na":6.2,"cat":"Verduras, hortaliças e derivados"},{"id":116,"n":"Couve, manteiga, refogada","kcal":90.3,"p":1.7,"c":8.7,"f":6.6,"fb":5.7,"na":11.4,"cat":"Verduras, hortaliças e derivados"},{"id":117,"n":"Couve-flor, crua","kcal":22.6,"p":1.9,"c":4.5,"f":0.2,"fb":2.4,"na":3.4,"cat":"Verduras, hortaliças e derivados"},{"id":118,"n":"Couve-flor, cozida","kcal":19.1,"p":1.2,"c":3.9,"f":0.3,"fb":2.1,"na":1.8,"cat":"Verduras, hortaliças e derivados"},{"id":119,"n":"Espinafre, Nova Zelândia, cru","kcal":16.1,"p":2.0,"c":2.6,"f":0.2,"fb":2.1,"na":17.1,"cat":"Verduras, hortaliças e derivados"},{"id":120,"n":"Espinafre, Nova Zelândia, refogado","kcal":67.3,"p":2.7,"c":4.2,"f":5.4,"fb":2.5,"na":47.0,"cat":"Verduras, hortaliças e derivados"},{"id":121,"n":"Farinha, de mandioca, crua","kcal":360.9,"p":1.6,"c":87.9,"f":0.3,"fb":6.4,"na":1.0,"cat":"Verduras, hortaliças e derivados"},{"id":122,"n":"Farinha, de mandioca, torrada","kcal":365.3,"p":1.2,"c":89.2,"f":0.3,"fb":6.5,"na":10.3,"cat":"Verduras, hortaliças e derivados"},{"id":123,"n":"Farinha, de puba","kcal":360.2,"p":1.6,"c":87.3,"f":0.5,"fb":4.2,"na":3.6,"cat":"Verduras, hortaliças e derivados"},{"id":124,"n":"Fécula, de mandioca","kcal":330.9,"p":0.5,"c":81.1,"f":0.3,"fb":0.6,"na":2.4,"cat":"Verduras, hortaliças e derivados"},{"id":125,"n":"Feijão, broto, cru","kcal":38.7,"p":4.2,"c":7.8,"f":0.1,"fb":2.0,"na":1.8,"cat":"Verduras, hortaliças e derivados"},{"id":126,"n":"Inhame, cru","kcal":96.7,"p":2.1,"c":23.2,"f":0.2,"fb":1.7,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":127,"n":"Jiló, cru","kcal":27.4,"p":1.4,"c":6.2,"f":0.2,"fb":4.8,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":128,"n":"Jurubeba, crua","kcal":125.8,"p":4.4,"c":23.1,"f":3.9,"fb":23.9,"na":0.8,"cat":"Verduras, hortaliças e derivados"},{"id":129,"n":"Mandioca, cozida","kcal":125.4,"p":0.6,"c":30.1,"f":0.3,"fb":1.6,"na":0.9,"cat":"Verduras, hortaliças e derivados"},{"id":130,"n":"Mandioca, crua","kcal":151.4,"p":1.1,"c":36.2,"f":0.3,"fb":1.9,"na":2.1,"cat":"Verduras, hortaliças e derivados"},{"id":131,"n":"Mandioca, farofa, temperada","kcal":405.7,"p":2.1,"c":80.3,"f":9.1,"fb":7.8,"na":574.5,"cat":"Verduras, hortaliças e derivados"},{"id":132,"n":"Mandioca, frita","kcal":300.1,"p":1.4,"c":50.3,"f":11.2,"fb":1.9,"na":8.9,"cat":"Verduras, hortaliças e derivados"},{"id":133,"n":"Manjericão, cru","kcal":21.1,"p":2.0,"c":3.6,"f":0.4,"fb":3.3,"na":3.9,"cat":"Verduras, hortaliças e derivados"},{"id":134,"n":"Maxixe, cru","kcal":13.7,"p":1.4,"c":2.7,"f":0.1,"fb":2.2,"na":11.0,"cat":"Verduras, hortaliças e derivados"},{"id":135,"n":"Mostarda, folha, crua","kcal":18.1,"p":2.1,"c":3.2,"f":0.2,"fb":1.9,"na":2.9,"cat":"Verduras, hortaliças e derivados"},{"id":136,"n":"Nhoque, batata, cozido","kcal":180.8,"p":5.9,"c":36.8,"f":1.9,"fb":1.8,"na":7.1,"cat":"Verduras, hortaliças e derivados"},{"id":137,"n":"Nabo, cru","kcal":18.2,"p":1.2,"c":4.1,"f":0.1,"fb":2.6,"na":2.5,"cat":"Verduras, hortaliças e derivados"},{"id":138,"n":"Palmito, juçara, em conserva","kcal":23.2,"p":1.8,"c":4.3,"f":0.4,"fb":3.1,"na":513.8,"cat":"Verduras, hortaliças e derivados"},{"id":139,"n":"Palmito, pupunha, em conserva","kcal":29.4,"p":2.5,"c":5.5,"f":0.5,"fb":2.5,"na":562.7,"cat":"Verduras, hortaliças e derivados"},{"id":140,"n":"Pão, de queijo, assado","kcal":363.1,"p":5.1,"c":34.2,"f":24.6,"fb":0.6,"na":773.5,"cat":"Verduras, hortaliças e derivados"},{"id":141,"n":"Pão, de queijo, cru","kcal":294.5,"p":3.6,"c":38.5,"f":14.0,"fb":1.0,"na":405.0,"cat":"Verduras, hortaliças e derivados"},{"id":142,"n":"Pepino, cru","kcal":9.5,"p":0.9,"c":2.0,"f":0.0,"fb":1.1,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":143,"n":"Pimentão, amarelo, cru","kcal":27.9,"p":1.2,"c":6.0,"f":0.4,"fb":1.9,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":144,"n":"Pimentão, verde, cru","kcal":21.3,"p":1.1,"c":4.9,"f":0.1,"fb":2.6,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":145,"n":"Pimentão, vermelho, cru","kcal":23.3,"p":1.0,"c":5.5,"f":0.1,"fb":1.6,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":146,"n":"Polvilho, doce","kcal":351.2,"p":0.4,"c":86.8,"f":0.0,"fb":0.2,"na":1.6,"cat":"Verduras, hortaliças e derivados"},{"id":147,"n":"Quiabo, cru","kcal":29.9,"p":1.9,"c":6.4,"f":0.3,"fb":4.6,"na":0.9,"cat":"Verduras, hortaliças e derivados"},{"id":148,"n":"Rabanete, cru","kcal":13.7,"p":1.4,"c":2.7,"f":0.1,"fb":2.2,"na":11.0,"cat":"Verduras, hortaliças e derivados"},{"id":149,"n":"Repolho, branco, cru","kcal":17.1,"p":0.9,"c":3.9,"f":0.1,"fb":1.9,"na":3.6,"cat":"Verduras, hortaliças e derivados"},{"id":150,"n":"Repolho, roxo, cru","kcal":30.9,"p":1.9,"c":7.2,"f":0.1,"fb":2.0,"na":2.3,"cat":"Verduras, hortaliças e derivados"},{"id":151,"n":"Repolho, roxo, refogado","kcal":41.8,"p":1.8,"c":7.6,"f":1.2,"fb":1.8,"na":3.4,"cat":"Verduras, hortaliças e derivados"},{"id":152,"n":"Rúcula, crua","kcal":13.1,"p":1.8,"c":2.2,"f":0.1,"fb":1.7,"na":9.4,"cat":"Verduras, hortaliças e derivados"},{"id":153,"n":"Salsa, crua","kcal":33.4,"p":3.3,"c":5.7,"f":0.6,"fb":1.9,"na":2.3,"cat":"Verduras, hortaliças e derivados"},{"id":154,"n":"Seleta de legumes, enlatada","kcal":56.5,"p":3.4,"c":12.7,"f":0.4,"fb":3.1,"na":398.1,"cat":"Verduras, hortaliças e derivados"},{"id":155,"n":"Serralha, crua","kcal":30.4,"p":2.7,"c":4.9,"f":0.7,"fb":3.5,"na":19.3,"cat":"Verduras, hortaliças e derivados"},{"id":156,"n":"Taioba, crua","kcal":34.2,"p":2.9,"c":5.4,"f":0.9,"fb":4.5,"na":1.2,"cat":"Verduras, hortaliças e derivados"},{"id":157,"n":"Tomate, com semente, cru","kcal":15.3,"p":1.1,"c":3.1,"f":0.2,"fb":1.2,"na":1.0,"cat":"Verduras, hortaliças e derivados"},{"id":158,"n":"Tomate, extrato","kcal":60.9,"p":2.4,"c":15.0,"f":0.2,"fb":2.8,"na":497.9,"cat":"Verduras, hortaliças e derivados"},{"id":159,"n":"Tomate, molho industrializado","kcal":38.4,"p":1.4,"c":7.7,"f":0.9,"fb":3.1,"na":418.3,"cat":"Verduras, hortaliças e derivados"},{"id":160,"n":"Tomate, purê","kcal":27.9,"p":1.4,"c":6.9,"f":0.0,"fb":1.0,"na":103.9,"cat":"Verduras, hortaliças e derivados"},{"id":161,"n":"Tomate, salada","kcal":20.5,"p":0.8,"c":5.1,"f":0.0,"fb":2.3,"na":5.2,"cat":"Verduras, hortaliças e derivados"},{"id":162,"n":"Vagem, crua","kcal":24.9,"p":1.8,"c":5.3,"f":0.2,"fb":2.4,"na":0.0,"cat":"Verduras, hortaliças e derivados"},{"id":163,"n":"Abacate, cru","kcal":96.2,"p":1.2,"c":6.0,"f":8.4,"fb":6.3,"na":0.0,"cat":"Frutas e derivados"},{"id":164,"n":"Abacaxi, cru","kcal":48.3,"p":0.9,"c":12.3,"f":0.1,"fb":1.0,"na":0.0,"cat":"Frutas e derivados"},{"id":165,"n":"Abacaxi, polpa, congelada","kcal":30.6,"p":0.5,"c":7.8,"f":0.1,"fb":0.3,"na":1.2,"cat":"Frutas e derivados"},{"id":166,"n":"Abiu, cru","kcal":62.4,"p":0.8,"c":14.9,"f":0.7,"fb":1.7,"na":0.0,"cat":"Frutas e derivados"},{"id":167,"n":"Açaí, polpa, com xarope de guaraná e glucose","kcal":110.3,"p":0.7,"c":21.5,"f":3.7,"fb":1.7,"na":15.1,"cat":"Frutas e derivados"},{"id":168,"n":"Açaí, polpa, congelada","kcal":58.0,"p":0.8,"c":6.2,"f":3.9,"fb":2.6,"na":5.2,"cat":"Frutas e derivados"},{"id":169,"n":"Acerola, crua","kcal":33.5,"p":0.9,"c":8.0,"f":0.2,"fb":1.5,"na":0.0,"cat":"Frutas e derivados"},{"id":170,"n":"Acerola, polpa, congelada","kcal":21.9,"p":0.6,"c":5.5,"f":0.0,"fb":0.7,"na":1.3,"cat":"Frutas e derivados"},{"id":171,"n":"Ameixa, calda, enlatada","kcal":182.8,"p":0.4,"c":46.9,"f":0.0,"fb":0.5,"na":2.7,"cat":"Frutas e derivados"},{"id":172,"n":"Ameixa, crua","kcal":52.5,"p":0.8,"c":13.9,"f":0.0,"fb":2.4,"na":0.0,"cat":"Frutas e derivados"},{"id":173,"n":"Ameixa, em calda, enlatada, drenada","kcal":177.4,"p":1.0,"c":47.7,"f":0.3,"fb":4.5,"na":2.8,"cat":"Frutas e derivados"},{"id":174,"n":"Atemóia, crua","kcal":97.0,"p":1.0,"c":25.3,"f":0.3,"fb":2.1,"na":0.8,"cat":"Frutas e derivados"},{"id":175,"n":"Banana, da terra, crua","kcal":128.0,"p":1.4,"c":33.7,"f":0.2,"fb":1.5,"na":0.0,"cat":"Frutas e derivados"},{"id":176,"n":"Banana, doce em barra","kcal":280.1,"p":2.2,"c":75.7,"f":0.1,"fb":3.8,"na":9.9,"cat":"Frutas e derivados"},{"id":177,"n":"Banana, figo, crua","kcal":105.1,"p":1.1,"c":27.8,"f":0.1,"fb":2.8,"na":0.0,"cat":"Frutas e derivados"},{"id":178,"n":"Banana, maçã, crua","kcal":86.8,"p":1.8,"c":22.3,"f":0.1,"fb":2.6,"na":0.0,"cat":"Frutas e derivados"},{"id":179,"n":"Banana, nanica, crua","kcal":91.5,"p":1.4,"c":23.8,"f":0.1,"fb":1.9,"na":0.0,"cat":"Frutas e derivados"},{"id":180,"n":"Banana, ouro, crua","kcal":112.4,"p":1.5,"c":29.3,"f":0.2,"fb":2.0,"na":0.0,"cat":"Frutas e derivados"},{"id":181,"n":"Banana, pacova, crua","kcal":77.9,"p":1.2,"c":20.3,"f":0.1,"fb":2.0,"na":0.9,"cat":"Frutas e derivados"},{"id":182,"n":"Banana, prata, crua","kcal":98.2,"p":1.3,"c":26.0,"f":0.1,"fb":2.0,"na":0.0,"cat":"Frutas e derivados"},{"id":183,"n":"Cacau, cru","kcal":74.3,"p":1.0,"c":19.4,"f":0.1,"fb":2.2,"na":0.7,"cat":"Frutas e derivados"},{"id":184,"n":"Cajá-Manga, cru","kcal":45.6,"p":1.3,"c":11.4,"f":0.0,"fb":2.6,"na":1.4,"cat":"Frutas e derivados"},{"id":185,"n":"Cajá, polpa, congelada","kcal":26.3,"p":0.6,"c":6.4,"f":0.2,"fb":1.4,"na":6.9,"cat":"Frutas e derivados"},{"id":186,"n":"Caju, cru","kcal":43.1,"p":1.0,"c":10.3,"f":0.3,"fb":1.7,"na":3.0,"cat":"Frutas e derivados"},{"id":187,"n":"Caju, polpa, congelada","kcal":36.6,"p":0.5,"c":9.4,"f":0.2,"fb":0.8,"na":4.2,"cat":"Frutas e derivados"},{"id":188,"n":"Caju, suco concentrado, envasado","kcal":45.1,"p":0.4,"c":10.7,"f":0.2,"fb":0.6,"na":45.0,"cat":"Frutas e derivados"},{"id":189,"n":"Caqui, chocolate, cru","kcal":71.4,"p":0.4,"c":19.3,"f":0.1,"fb":6.5,"na":2.2,"cat":"Frutas e derivados"},{"id":190,"n":"Carambola, crua","kcal":45.7,"p":0.9,"c":11.5,"f":0.2,"fb":2.0,"na":4.1,"cat":"Frutas e derivados"},{"id":191,"n":"Ciriguela, crua","kcal":75.6,"p":1.4,"c":18.9,"f":0.4,"fb":3.9,"na":1.7,"cat":"Frutas e derivados"},{"id":192,"n":"Cupuaçu, cru","kcal":49.4,"p":1.2,"c":10.4,"f":1.0,"fb":3.1,"na":3.2,"cat":"Frutas e derivados"},{"id":193,"n":"Cupuaçu, polpa, congelada","kcal":48.8,"p":0.8,"c":11.4,"f":0.6,"fb":1.6,"na":0.7,"cat":"Frutas e derivados"},{"id":194,"n":"Figo, cru","kcal":41.4,"p":1.0,"c":10.2,"f":0.2,"fb":1.8,"na":0.0,"cat":"Frutas e derivados"},{"id":195,"n":"Figo, enlatado, em calda","kcal":184.4,"p":0.6,"c":50.3,"f":0.1,"fb":2.0,"na":6.9,"cat":"Frutas e derivados"},{"id":196,"n":"Fruta-pão, crua","kcal":67.0,"p":1.1,"c":17.2,"f":0.2,"fb":5.5,"na":0.8,"cat":"Frutas e derivados"},{"id":197,"n":"Goiaba, branca, com casca, crua","kcal":51.7,"p":0.9,"c":12.4,"f":0.5,"fb":6.3,"na":0.0,"cat":"Frutas e derivados"},{"id":198,"n":"Goiaba, doce em pasta","kcal":269.0,"p":0.6,"c":74.1,"f":0.0,"fb":3.7,"na":3.7,"cat":"Frutas e derivados"},{"id":199,"n":"Goiaba, doce, cascão","kcal":285.6,"p":0.4,"c":78.7,"f":0.1,"fb":4.4,"na":11.0,"cat":"Frutas e derivados"},{"id":200,"n":"Goiaba, vermelha, com casca, crua","kcal":54.2,"p":1.1,"c":13.0,"f":0.4,"fb":6.2,"na":0.0,"cat":"Frutas e derivados"},{"id":201,"n":"Graviola, crua","kcal":61.6,"p":0.8,"c":15.8,"f":0.2,"fb":1.9,"na":4.2,"cat":"Frutas e derivados"},{"id":202,"n":"Graviola, polpa, congelada","kcal":38.3,"p":0.6,"c":9.8,"f":0.1,"fb":1.2,"na":3.0,"cat":"Frutas e derivados"},{"id":203,"n":"Jabuticaba, crua","kcal":58.1,"p":0.6,"c":15.3,"f":0.1,"fb":2.3,"na":0.0,"cat":"Frutas e derivados"},{"id":204,"n":"Jaca, crua","kcal":87.9,"p":1.4,"c":22.5,"f":0.3,"fb":2.4,"na":1.8,"cat":"Frutas e derivados"},{"id":205,"n":"Jambo, cru","kcal":26.9,"p":0.9,"c":6.5,"f":0.1,"fb":5.1,"na":21.7,"cat":"Frutas e derivados"},{"id":206,"n":"Jamelão, cru","kcal":41.0,"p":0.5,"c":10.6,"f":0.1,"fb":1.8,"na":1.4,"cat":"Frutas e derivados"},{"id":207,"n":"Kiwi, cru","kcal":51.1,"p":1.3,"c":11.5,"f":0.6,"fb":2.7,"na":0.0,"cat":"Frutas e derivados"},{"id":208,"n":"Laranja, baía, crua","kcal":45.4,"p":1.0,"c":11.5,"f":0.1,"fb":1.1,"na":0.0,"cat":"Frutas e derivados"},{"id":209,"n":"Laranja, baía, suco","kcal":36.6,"p":0.7,"c":8.7,"f":0.0,"fb":0.0,"na":0.0,"cat":"Frutas e derivados"},{"id":210,"n":"Laranja, da terra, crua","kcal":51.5,"p":1.1,"c":12.9,"f":0.2,"fb":4.0,"na":0.8,"cat":"Frutas e derivados"},{"id":211,"n":"Laranja, da terra, suco","kcal":41.0,"p":0.7,"c":9.6,"f":0.1,"fb":1.0,"na":0.0,"cat":"Frutas e derivados"},{"id":212,"n":"Laranja, lima, crua","kcal":45.7,"p":1.1,"c":11.5,"f":0.1,"fb":1.8,"na":1.1,"cat":"Frutas e derivados"},{"id":213,"n":"Laranja, lima, suco","kcal":39.3,"p":0.7,"c":9.2,"f":0.1,"fb":0.4,"na":0.0,"cat":"Frutas e derivados"},{"id":214,"n":"Laranja, pêra, crua","kcal":36.8,"p":1.0,"c":8.9,"f":0.1,"fb":0.8,"na":0.0,"cat":"Frutas e derivados"},{"id":215,"n":"Laranja, pêra, suco","kcal":32.7,"p":0.7,"c":7.6,"f":0.1,"fb":0.0,"na":0.0,"cat":"Frutas e derivados"},{"id":216,"n":"Laranja, valência, crua","kcal":46.1,"p":0.8,"c":11.7,"f":0.2,"fb":1.7,"na":0.6,"cat":"Frutas e derivados"},{"id":217,"n":"Laranja, valência, suco","kcal":36.2,"p":0.5,"c":8.6,"f":0.1,"fb":0.4,"na":0.0,"cat":"Frutas e derivados"},{"id":218,"n":"Limão, cravo, suco","kcal":14.1,"p":0.3,"c":5.2,"f":0.0,"fb":0.0,"na":0.0,"cat":"Frutas e derivados"},{"id":219,"n":"Limão, galego, suco","kcal":22.2,"p":0.6,"c":7.3,"f":0.1,"fb":0.0,"na":0.0,"cat":"Frutas e derivados"},{"id":220,"n":"Limão, tahiti, cru","kcal":31.8,"p":0.9,"c":11.1,"f":0.1,"fb":1.2,"na":1.2,"cat":"Frutas e derivados"},{"id":221,"n":"Maçã, Argentina, com casca, crua","kcal":62.5,"p":0.2,"c":16.6,"f":0.2,"fb":2.0,"na":1.3,"cat":"Frutas e derivados"},{"id":222,"n":"Maçã, Fuji, com casca, crua","kcal":55.5,"p":0.3,"c":15.2,"f":0.0,"fb":1.3,"na":0.0,"cat":"Frutas e derivados"},{"id":223,"n":"Macaúba, crua","kcal":404.3,"p":2.1,"c":13.9,"f":40.7,"fb":13.4,"na":0.7,"cat":"Frutas e derivados"},{"id":224,"n":"Mamão, doce em calda, drenado","kcal":195.6,"p":0.2,"c":54.0,"f":0.1,"fb":1.3,"na":2.9,"cat":"Frutas e derivados"},{"id":225,"n":"Mamão, Formosa, cru","kcal":45.3,"p":0.8,"c":11.6,"f":0.1,"fb":1.8,"na":3.3,"cat":"Frutas e derivados"},{"id":226,"n":"Mamão, Papaia, cru","kcal":40.2,"p":0.5,"c":10.4,"f":0.1,"fb":1.0,"na":1.6,"cat":"Frutas e derivados"},{"id":227,"n":"Mamão verde, doce em calda, drenado","kcal":209.4,"p":0.3,"c":57.6,"f":0.1,"fb":1.2,"na":4.7,"cat":"Frutas e derivados"},{"id":228,"n":"Manga, Haden, crua","kcal":63.5,"p":0.4,"c":16.7,"f":0.3,"fb":1.6,"na":0.6,"cat":"Frutas e derivados"},{"id":229,"n":"Manga, Palmer, crua","kcal":72.5,"p":0.4,"c":19.4,"f":0.2,"fb":1.6,"na":1.9,"cat":"Frutas e derivados"},{"id":230,"n":"Manga, polpa, congelada","kcal":48.3,"p":0.4,"c":12.5,"f":0.2,"fb":1.1,"na":6.7,"cat":"Frutas e derivados"},{"id":231,"n":"Manga, Tommy Atkins, crua","kcal":50.7,"p":0.9,"c":12.8,"f":0.2,"fb":2.1,"na":0.0,"cat":"Frutas e derivados"},{"id":232,"n":"Maracujá, cru","kcal":68.4,"p":2.0,"c":12.3,"f":2.1,"fb":1.1,"na":1.6,"cat":"Frutas e derivados"},{"id":233,"n":"Maracujá, polpa, congelada","kcal":38.8,"p":0.8,"c":9.6,"f":0.2,"fb":0.5,"na":8.1,"cat":"Frutas e derivados"},{"id":234,"n":"Maracujá, suco concentrado, envasado","kcal":42.0,"p":0.8,"c":9.6,"f":0.2,"fb":0.4,"na":21.7,"cat":"Frutas e derivados"},{"id":235,"n":"Melancia, crua","kcal":32.6,"p":0.9,"c":8.1,"f":0.0,"fb":0.1,"na":0.0,"cat":"Frutas e derivados"},{"id":236,"n":"Melão, cru","kcal":29.4,"p":0.7,"c":7.5,"f":0.0,"fb":0.2,"na":11.2,"cat":"Frutas e derivados"},{"id":237,"n":"Mexerica, Murcote, crua","kcal":57.6,"p":0.9,"c":14.9,"f":0.1,"fb":3.1,"na":1.2,"cat":"Frutas e derivados"},{"id":238,"n":"Mexerica, Rio, crua","kcal":36.9,"p":0.7,"c":9.3,"f":0.1,"fb":2.7,"na":1.8,"cat":"Frutas e derivados"},{"id":239,"n":"Morango, cru","kcal":30.1,"p":0.9,"c":6.8,"f":0.3,"fb":1.7,"na":0.0,"cat":"Frutas e derivados"},{"id":240,"n":"Nêspera, crua","kcal":42.5,"p":0.3,"c":11.5,"f":0.0,"fb":3.0,"na":0.0,"cat":"Frutas e derivados"},{"id":241,"n":"Pequi, cru","kcal":205.0,"p":2.3,"c":13.0,"f":18.0,"fb":19.0,"na":0.0,"cat":"Frutas e derivados"},{"id":242,"n":"Pêra, Park, crua","kcal":60.6,"p":0.2,"c":16.1,"f":0.2,"fb":3.0,"na":1.0,"cat":"Frutas e derivados"},{"id":243,"n":"Pêra, Williams, crua","kcal":53.3,"p":0.6,"c":14.0,"f":0.1,"fb":3.0,"na":0.0,"cat":"Frutas e derivados"},{"id":244,"n":"Pêssego, Aurora, cru","kcal":36.3,"p":0.8,"c":9.3,"f":0.0,"fb":1.4,"na":0.0,"cat":"Frutas e derivados"},{"id":245,"n":"Pêssego, enlatado, em calda","kcal":63.1,"p":0.7,"c":16.9,"f":0.0,"fb":1.0,"na":3.2,"cat":"Frutas e derivados"},{"id":246,"n":"Pinha, crua","kcal":88.5,"p":1.5,"c":22.4,"f":0.3,"fb":3.4,"na":1.3,"cat":"Frutas e derivados"},{"id":247,"n":"Pitanga, crua","kcal":41.4,"p":0.9,"c":10.2,"f":0.2,"fb":3.2,"na":1.7,"cat":"Frutas e derivados"},{"id":248,"n":"Pitanga, polpa, congelada","kcal":19.1,"p":0.3,"c":4.8,"f":0.1,"fb":0.7,"na":5.0,"cat":"Frutas e derivados"},{"id":249,"n":"Romã, crua","kcal":55.7,"p":0.4,"c":15.1,"f":0.0,"fb":0.4,"na":0.6,"cat":"Frutas e derivados"},{"id":250,"n":"Tamarindo, cru","kcal":275.7,"p":3.2,"c":72.5,"f":0.5,"fb":6.4,"na":0.4,"cat":"Frutas e derivados"},{"id":251,"n":"Tangerina, Poncã, crua","kcal":37.8,"p":0.8,"c":9.6,"f":0.1,"fb":0.9,"na":0.0,"cat":"Frutas e derivados"},{"id":252,"n":"Tangerina, Poncã, suco","kcal":36.1,"p":0.5,"c":8.8,"f":0.0,"fb":0.0,"na":0.0,"cat":"Frutas e derivados"},{"id":253,"n":"Tucumã, cru","kcal":262.0,"p":2.1,"c":26.5,"f":19.1,"fb":12.7,"na":3.9,"cat":"Frutas e derivados"},{"id":254,"n":"Umbu, cru","kcal":37.0,"p":0.8,"c":9.4,"f":0.0,"fb":2.0,"na":0.0,"cat":"Frutas e derivados"},{"id":255,"n":"Umbu, polpa, congelada","kcal":33.9,"p":0.5,"c":8.8,"f":0.1,"fb":1.3,"na":5.8,"cat":"Frutas e derivados"},{"id":256,"n":"Uva, Itália, crua","kcal":52.9,"p":0.7,"c":13.6,"f":0.2,"fb":0.9,"na":0.0,"cat":"Frutas e derivados"},{"id":257,"n":"Uva, Rubi, crua","kcal":49.1,"p":0.6,"c":12.7,"f":0.2,"fb":0.9,"na":7.9,"cat":"Frutas e derivados"},{"id":258,"n":"Uva, suco concentrado, envasado","kcal":57.7,"p":0.0,"c":14.7,"f":0.0,"fb":0.2,"na":9.6,"cat":"Frutas e derivados"},{"id":259,"n":"Azeite, de dendê","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":260,"n":"Azeite, de oliva, extra virgem","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":261,"n":"Manteiga, com sal","kcal":726.0,"p":0.4,"c":0.1,"f":82.4,"fb":0,"na":578.7,"cat":"Gorduras e óleos"},{"id":262,"n":"Manteiga, sem sal","kcal":757.5,"p":0.4,"c":0.0,"f":86.0,"fb":0,"na":3.8,"cat":"Gorduras e óleos"},{"id":263,"n":"Margarina, com óleo hidrogenado, com sal (65% de lipídeos)","kcal":596.1,"p":0.0,"c":0.0,"f":67.4,"fb":0,"na":894.0,"cat":"Gorduras e óleos"},{"id":264,"n":"Margarina, com óleo hidrogenado, sem sal (80% de lipídeos)","kcal":722.5,"p":0.0,"c":0.0,"f":81.7,"fb":0,"na":77.9,"cat":"Gorduras e óleos"},{"id":265,"n":"Margarina, com óleo interesterificado, com sal (65%de lipídeos)","kcal":594.5,"p":0.0,"c":0.0,"f":67.2,"fb":0,"na":560.8,"cat":"Gorduras e óleos"},{"id":266,"n":"Margarina, com óleo interesterificado, sem sal (65% de lipídeos)","kcal":593.1,"p":0.0,"c":0.0,"f":67.1,"fb":0,"na":33.2,"cat":"Gorduras e óleos"},{"id":267,"n":"Óleo, de babaçu","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":268,"n":"Óleo, de canola","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":269,"n":"Óleo, de girassol","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":270,"n":"Óleo, de milho","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":271,"n":"Óleo, de pequi","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":272,"n":"Óleo, de soja","kcal":884.0,"p":0,"c":0,"f":100.0,"fb":0,"na":0,"cat":"Gorduras e óleos"},{"id":273,"n":"Abadejo, filé, congelado, assado","kcal":111.6,"p":23.5,"c":0.0,"f":1.2,"fb":0,"na":334.4,"cat":"Pescados e frutos do mar"},{"id":274,"n":"Abadejo, filé, congelado,cozido","kcal":91.1,"p":19.3,"c":0.0,"f":0.9,"fb":0,"na":189.3,"cat":"Pescados e frutos do mar"},{"id":275,"n":"Abadejo, filé, congelado, cru","kcal":59.1,"p":13.1,"c":0.0,"f":0.4,"fb":0,"na":78.5,"cat":"Pescados e frutos do mar"},{"id":276,"n":"Abadejo, filé, congelado, grelhado","kcal":129.6,"p":27.6,"c":0.0,"f":1.3,"fb":0,"na":305.1,"cat":"Pescados e frutos do mar"},{"id":277,"n":"Atum, conserva em óleo","kcal":165.9,"p":26.2,"c":0.0,"f":6.0,"fb":0,"na":362.1,"cat":"Pescados e frutos do mar"},{"id":278,"n":"Atum, fresco, cru","kcal":117.5,"p":25.7,"c":0.0,"f":0.9,"fb":0,"na":30.3,"cat":"Pescados e frutos do mar"},{"id":279,"n":"Bacalhau, salgado, cru","kcal":135.9,"p":29.0,"c":0.0,"f":1.3,"fb":0,"na":13585.1,"cat":"Pescados e frutos do mar"},{"id":280,"n":"Bacalhau, salgado, refogado","kcal":139.7,"p":24.0,"c":1.2,"f":3.6,"fb":0,"na":1256.3,"cat":"Pescados e frutos do mar"},{"id":281,"n":"Cação, posta, com farinha de trigo, frita","kcal":208.3,"p":25.0,"c":3.1,"f":10.0,"fb":0.5,"na":160.0,"cat":"Pescados e frutos do mar"},{"id":282,"n":"Cação, posta, cozida","kcal":116.0,"p":25.6,"c":0.0,"f":0.7,"fb":0,"na":114.9,"cat":"Pescados e frutos do mar"},{"id":283,"n":"Cação, posta, crua","kcal":83.3,"p":17.9,"c":0.0,"f":0.8,"fb":0,"na":176.0,"cat":"Pescados e frutos do mar"},{"id":284,"n":"Camarão, Rio Grande, grande, cozido","kcal":90.0,"p":19.0,"c":0.0,"f":1.0,"fb":0,"na":366.6,"cat":"Pescados e frutos do mar"},{"id":285,"n":"Camarão, Rio Grande, grande, cru","kcal":47.2,"p":10.0,"c":0.0,"f":0.5,"fb":0,"na":201.1,"cat":"Pescados e frutos do mar"},{"id":286,"n":"Camarão, Sete Barbas, sem cabeça, com casca, frito","kcal":231.2,"p":18.4,"c":2.9,"f":15.6,"fb":0,"na":99.1,"cat":"Pescados e frutos do mar"},{"id":287,"n":"Caranguejo, cozido","kcal":82.7,"p":18.5,"c":0.0,"f":0.4,"fb":0,"na":360.1,"cat":"Pescados e frutos do mar"},{"id":288,"n":"Corimba, cru","kcal":128.2,"p":17.4,"c":-0.0,"f":6.0,"fb":0,"na":47.0,"cat":"Pescados e frutos do mar"},{"id":289,"n":"Corimbatá, assado","kcal":261.5,"p":19.9,"c":0.0,"f":19.6,"fb":0,"na":40.4,"cat":"Pescados e frutos do mar"},{"id":290,"n":"Corimbatá, cozido","kcal":238.7,"p":20.1,"c":0.0,"f":16.9,"fb":0,"na":37.2,"cat":"Pescados e frutos do mar"},{"id":291,"n":"Corvina de água doce, crua","kcal":101.0,"p":18.9,"c":0.0,"f":2.2,"fb":0,"na":45.1,"cat":"Pescados e frutos do mar"},{"id":292,"n":"Corvina do mar, crua","kcal":94.0,"p":18.6,"c":0.0,"f":1.6,"fb":0,"na":68.0,"cat":"Pescados e frutos do mar"},{"id":293,"n":"Corvina grande, assada","kcal":146.5,"p":26.8,"c":0.0,"f":3.6,"fb":0,"na":85.4,"cat":"Pescados e frutos do mar"},{"id":294,"n":"Corvina grande, cozida","kcal":100.1,"p":23.4,"c":0.0,"f":2.6,"fb":0,"na":68.4,"cat":"Pescados e frutos do mar"},{"id":295,"n":"Dourada de água doce, fresca","kcal":131.2,"p":18.8,"c":0.0,"f":5.6,"fb":0,"na":40.3,"cat":"Pescados e frutos do mar"},{"id":296,"n":"Lambari, congelado, cru","kcal":130.8,"p":16.8,"c":0.0,"f":6.5,"fb":0,"na":47.9,"cat":"Pescados e frutos do mar"},{"id":297,"n":"Lambari, congelado, frito","kcal":326.9,"p":28.4,"c":0.0,"f":22.8,"fb":0,"na":64.6,"cat":"Pescados e frutos do mar"},{"id":298,"n":"Lambari, fresco, cru","kcal":151.6,"p":15.7,"c":0.0,"f":9.4,"fb":0,"na":41.1,"cat":"Pescados e frutos do mar"},{"id":299,"n":"Manjuba, com farinha de trigo, frita","kcal":343.6,"p":23.4,"c":10.2,"f":22.6,"fb":0.4,"na":36.5,"cat":"Pescados e frutos do mar"},{"id":300,"n":"Manjuba, frita","kcal":349.3,"p":30.1,"c":0.0,"f":24.5,"fb":0,"na":40.6,"cat":"Pescados e frutos do mar"},{"id":301,"n":"Merluza, filé, assado","kcal":121.9,"p":26.6,"c":0.0,"f":0.9,"fb":0,"na":119.9,"cat":"Pescados e frutos do mar"},{"id":302,"n":"Merluza, filé, cru","kcal":89.1,"p":16.6,"c":0.0,"f":2.0,"fb":0,"na":79.5,"cat":"Pescados e frutos do mar"},{"id":303,"n":"Merluza, filé, frito","kcal":191.6,"p":26.9,"c":0.0,"f":8.5,"fb":0,"na":90.0,"cat":"Pescados e frutos do mar"},{"id":304,"n":"Pescada, branca, crua","kcal":110.9,"p":16.3,"c":0.0,"f":4.6,"fb":0,"na":76.2,"cat":"Pescados e frutos do mar"},{"id":305,"n":"Pescada, branca, frita","kcal":223.0,"p":27.4,"c":0.0,"f":11.8,"fb":0,"na":107.2,"cat":"Pescados e frutos do mar"},{"id":306,"n":"Pescada, filé, com farinha de trigo, frito","kcal":283.4,"p":21.4,"c":5.0,"f":19.1,"fb":0.0,"na":90.5,"cat":"Pescados e frutos do mar"},{"id":307,"n":"Pescada, filé, cru","kcal":107.2,"p":16.6,"c":0.0,"f":4.0,"fb":0,"na":77.5,"cat":"Pescados e frutos do mar"},{"id":308,"n":"Pescada, filé, frito","kcal":154.3,"p":28.6,"c":0.0,"f":3.6,"fb":0,"na":114.9,"cat":"Pescados e frutos do mar"},{"id":309,"n":"Pescada, filé, molho escabeche","kcal":142.0,"p":11.8,"c":5.0,"f":8.0,"fb":0.8,"na":51.3,"cat":"Pescados e frutos do mar"},{"id":310,"n":"Pescadinha, crua","kcal":76.4,"p":15.5,"c":0.0,"f":1.1,"fb":0,"na":120.3,"cat":"Pescados e frutos do mar"},{"id":311,"n":"Pintado, assado","kcal":191.6,"p":36.5,"c":0.0,"f":4.0,"fb":0,"na":81.0,"cat":"Pescados e frutos do mar"},{"id":312,"n":"Pintado, cru","kcal":91.1,"p":18.6,"c":0.0,"f":1.3,"fb":0,"na":43.3,"cat":"Pescados e frutos do mar"},{"id":313,"n":"Pintado, grelhado","kcal":152.2,"p":30.8,"c":0.0,"f":2.3,"fb":0,"na":53.1,"cat":"Pescados e frutos do mar"},{"id":314,"n":"Porquinho, cru","kcal":93.0,"p":20.5,"c":0.0,"f":0.6,"fb":0,"na":66.7,"cat":"Pescados e frutos do mar"},{"id":315,"n":"Salmão, filé, com pele, fresco,  grelhado","kcal":228.7,"p":23.9,"c":0.0,"f":14.0,"fb":0,"na":85.1,"cat":"Pescados e frutos do mar"},{"id":316,"n":"Salmão, sem pele, fresco, cru","kcal":169.8,"p":19.3,"c":0.0,"f":9.7,"fb":0,"na":64.2,"cat":"Pescados e frutos do mar"},{"id":317,"n":"Salmão, sem pele, fresco, grelhado","kcal":242.7,"p":26.1,"c":0.0,"f":14.5,"fb":0,"na":95.8,"cat":"Pescados e frutos do mar"},{"id":318,"n":"Sardinha, assada","kcal":164.4,"p":32.2,"c":0.0,"f":3.0,"fb":0,"na":74.5,"cat":"Pescados e frutos do mar"},{"id":319,"n":"Sardinha, conserva em óleo","kcal":285.0,"p":15.9,"c":0.0,"f":24.0,"fb":0,"na":665.8,"cat":"Pescados e frutos do mar"},{"id":320,"n":"Sardinha, frita","kcal":257.0,"p":33.4,"c":0.0,"f":12.7,"fb":0,"na":60.1,"cat":"Pescados e frutos do mar"},{"id":321,"n":"Sardinha, inteira, crua","kcal":113.9,"p":21.1,"c":0.0,"f":2.6,"fb":0,"na":60.4,"cat":"Pescados e frutos do mar"},{"id":322,"n":"Tucunaré, filé, congelado, cru","kcal":87.7,"p":18.0,"c":-0.0,"f":1.2,"fb":0,"na":56.6,"cat":"Pescados e frutos do mar"},{"id":323,"n":"Apresuntado","kcal":128.9,"p":13.4,"c":2.9,"f":6.7,"fb":0,"na":942.9,"cat":"Carnes e derivados"},{"id":324,"n":"Caldo de carne, tablete","kcal":240.6,"p":7.8,"c":15.1,"f":16.6,"fb":0.6,"na":22179.7,"cat":"Carnes e derivados"},{"id":325,"n":"Caldo de galinha, tablete","kcal":251.4,"p":6.3,"c":10.6,"f":20.4,"fb":11.8,"na":22299.9,"cat":"Carnes e derivados"},{"id":326,"n":"Carne, bovina, acém, moído, cozido","kcal":212.4,"p":26.7,"c":0.0,"f":10.9,"fb":0,"na":52.4,"cat":"Carnes e derivados"},{"id":327,"n":"Carne, bovina, acém, moído, cru","kcal":136.6,"p":19.4,"c":0.0,"f":5.9,"fb":0,"na":48.6,"cat":"Carnes e derivados"},{"id":328,"n":"Carne, bovina, acém, sem gordura, cozido","kcal":214.6,"p":27.3,"c":0.0,"f":10.9,"fb":0,"na":56.2,"cat":"Carnes e derivados"},{"id":329,"n":"Carne, bovina, acém, sem gordura, cru","kcal":144.0,"p":20.8,"c":0.0,"f":6.1,"fb":0,"na":49.8,"cat":"Carnes e derivados"},{"id":330,"n":"Carne, bovina, almôndegas, cruas","kcal":189.3,"p":12.3,"c":9.8,"f":11.2,"fb":0,"na":621.3,"cat":"Carnes e derivados"},{"id":331,"n":"Carne, bovina, almôndegas, fritas","kcal":271.8,"p":18.2,"c":14.3,"f":15.8,"fb":0,"na":1030.3,"cat":"Carnes e derivados"},{"id":332,"n":"Carne, bovina, bucho, cozido","kcal":133.0,"p":21.6,"c":0.0,"f":4.5,"fb":0,"na":38.2,"cat":"Carnes e derivados"},{"id":333,"n":"Carne, bovina, bucho, cru","kcal":137.3,"p":20.5,"c":0.0,"f":5.5,"fb":0,"na":45.0,"cat":"Carnes e derivados"},{"id":334,"n":"Carne, bovina, capa de contra-filé, com gordura, crua","kcal":216.9,"p":19.2,"c":0.0,"f":15.0,"fb":0,"na":57.5,"cat":"Carnes e derivados"},{"id":335,"n":"Carne, bovina, capa de contra-filé, com gordura, grelhada","kcal":311.7,"p":30.7,"c":0.0,"f":20.0,"fb":0,"na":80.5,"cat":"Carnes e derivados"},{"id":336,"n":"Carne, bovina, capa de contra-filé, sem gordura, crua","kcal":131.1,"p":21.5,"c":0.0,"f":4.3,"fb":0,"na":79.2,"cat":"Carnes e derivados"},{"id":337,"n":"Carne, bovina, capa de contra-filé, sem gordura, grelhada","kcal":239.4,"p":35.1,"c":-0.0,"f":9.9,"fb":0,"na":82.8,"cat":"Carnes e derivados"},{"id":338,"n":"Carne, bovina, charque, cozido","kcal":262.8,"p":36.4,"c":0.0,"f":11.9,"fb":0,"na":1442.7,"cat":"Carnes e derivados"},{"id":339,"n":"Carne, bovina, charque, cru","kcal":248.9,"p":22.7,"c":0.0,"f":16.8,"fb":0,"na":5875.0,"cat":"Carnes e derivados"},{"id":340,"n":"Carne, bovina, contra-filé, à milanesa","kcal":351.6,"p":20.6,"c":12.2,"f":24.0,"fb":0.4,"na":77.1,"cat":"Carnes e derivados"},{"id":341,"n":"Carne, bovina, contra-filé de costela, cru","kcal":202.4,"p":19.8,"c":0.0,"f":13.1,"fb":0,"na":38.5,"cat":"Carnes e derivados"},{"id":342,"n":"Carne, bovina, contra-filé de costela, grelhado","kcal":274.9,"p":29.9,"c":0.0,"f":16.3,"fb":0,"na":50.9,"cat":"Carnes e derivados"},{"id":343,"n":"Carne, bovina, contra-filé, com gordura, cru","kcal":205.9,"p":21.1,"c":0.0,"f":12.8,"fb":0,"na":44.1,"cat":"Carnes e derivados"},{"id":344,"n":"Carne, bovina, contra-filé, com gordura, grelhado","kcal":278.1,"p":32.4,"c":0.0,"f":15.5,"fb":0,"na":57.1,"cat":"Carnes e derivados"},{"id":345,"n":"Carne, bovina, contra-filé, sem gordura, cru","kcal":156.6,"p":24.0,"c":0.0,"f":6.0,"fb":0,"na":52.9,"cat":"Carnes e derivados"},{"id":346,"n":"Carne, bovina, contra-filé, sem gordura, grelhado","kcal":193.7,"p":35.9,"c":0.0,"f":4.5,"fb":0,"na":57.5,"cat":"Carnes e derivados"},{"id":347,"n":"Carne, bovina, costela, assada","kcal":373.0,"p":28.8,"c":0.0,"f":27.7,"fb":0,"na":91.9,"cat":"Carnes e derivados"},{"id":348,"n":"Carne, bovina, costela, crua","kcal":357.7,"p":16.7,"c":0.0,"f":31.8,"fb":0,"na":70.0,"cat":"Carnes e derivados"},{"id":349,"n":"Carne, bovina, coxão duro, sem gordura, cozido","kcal":216.6,"p":31.9,"c":0.0,"f":8.9,"fb":0,"na":41.1,"cat":"Carnes e derivados"},{"id":350,"n":"Carne, bovina, coxão duro, sem gordura, cru","kcal":148.0,"p":21.5,"c":0.0,"f":6.2,"fb":0,"na":48.5,"cat":"Carnes e derivados"},{"id":351,"n":"Carne, bovina, coxão mole, sem gordura, cozido","kcal":218.7,"p":32.4,"c":0.0,"f":8.9,"fb":0,"na":43.5,"cat":"Carnes e derivados"},{"id":352,"n":"Carne, bovina, coxão mole, sem gordura, cru","kcal":169.1,"p":21.2,"c":0.0,"f":8.7,"fb":0,"na":60.5,"cat":"Carnes e derivados"},{"id":353,"n":"Carne, bovina, cupim, assado","kcal":330.1,"p":28.6,"c":0.0,"f":23.0,"fb":0,"na":71.6,"cat":"Carnes e derivados"},{"id":354,"n":"Carne, bovina, cupim, cru","kcal":221.4,"p":19.5,"c":0.0,"f":15.3,"fb":0,"na":46.9,"cat":"Carnes e derivados"},{"id":355,"n":"Carne, bovina, fígado, cru","kcal":141.0,"p":20.7,"c":1.1,"f":5.4,"fb":0,"na":75.9,"cat":"Carnes e derivados"},{"id":356,"n":"Carne, bovina, fígado, grelhado","kcal":225.0,"p":29.9,"c":4.2,"f":9.0,"fb":0,"na":82.2,"cat":"Carnes e derivados"},{"id":357,"n":"Carne, bovina, filé mingnon, sem gordura, cru","kcal":142.9,"p":21.6,"c":0.0,"f":5.6,"fb":0,"na":48.9,"cat":"Carnes e derivados"},{"id":358,"n":"Carne, bovina, filé mingnon, sem gordura, grelhado","kcal":219.7,"p":32.8,"c":0.0,"f":8.8,"fb":0,"na":57.9,"cat":"Carnes e derivados"},{"id":359,"n":"Carne, bovina, flanco, sem gordura, cozido","kcal":195.6,"p":29.4,"c":0.0,"f":7.8,"fb":0,"na":41.7,"cat":"Carnes e derivados"},{"id":360,"n":"Carne, bovina, flanco, sem gordura, cru","kcal":141.5,"p":20.0,"c":0.0,"f":6.2,"fb":0,"na":54.2,"cat":"Carnes e derivados"},{"id":361,"n":"Carne, bovina, fraldinha, com gordura, cozida","kcal":338.4,"p":24.2,"c":0.0,"f":26.0,"fb":0,"na":38.8,"cat":"Carnes e derivados"},{"id":362,"n":"Carne, bovina, fraldinha, com gordura, crua","kcal":220.7,"p":17.6,"c":0.0,"f":16.1,"fb":0,"na":51.2,"cat":"Carnes e derivados"},{"id":363,"n":"Carne, bovina, lagarto, cozido","kcal":222.5,"p":32.9,"c":0.0,"f":9.1,"fb":0,"na":47.5,"cat":"Carnes e derivados"},{"id":364,"n":"Carne, bovina, lagarto, cru","kcal":134.9,"p":20.5,"c":0.0,"f":5.2,"fb":0,"na":53.6,"cat":"Carnes e derivados"},{"id":365,"n":"Carne, bovina, língua, cozida","kcal":314.9,"p":21.4,"c":0.0,"f":24.8,"fb":0,"na":59.1,"cat":"Carnes e derivados"},{"id":366,"n":"Carne, bovina, língua, crua","kcal":215.2,"p":17.1,"c":0.0,"f":15.8,"fb":0,"na":73.0,"cat":"Carnes e derivados"},{"id":367,"n":"Carne, bovina, maminha, crua","kcal":152.8,"p":20.9,"c":0.0,"f":7.0,"fb":0,"na":37.4,"cat":"Carnes e derivados"},{"id":368,"n":"Carne, bovina, maminha, grelhada","kcal":153.1,"p":30.7,"c":0.0,"f":2.4,"fb":0,"na":58.1,"cat":"Carnes e derivados"},{"id":369,"n":"Carne, bovina, miolo de alcatra, sem gordura, cru","kcal":162.9,"p":21.6,"c":0.0,"f":7.8,"fb":0,"na":43.1,"cat":"Carnes e derivados"},{"id":370,"n":"Carne, bovina, miolo de alcatra, sem gordura, grelhado","kcal":241.4,"p":31.9,"c":0.0,"f":11.6,"fb":0,"na":51.6,"cat":"Carnes e derivados"},{"id":371,"n":"Carne, bovina, músculo, sem gordura, cozido","kcal":193.8,"p":31.2,"c":0.0,"f":6.7,"fb":0,"na":61.8,"cat":"Carnes e derivados"},{"id":372,"n":"Carne, bovina, músculo, sem gordura, cru","kcal":141.6,"p":21.6,"c":0.0,"f":5.5,"fb":0,"na":66.1,"cat":"Carnes e derivados"},{"id":373,"n":"Carne, bovina, paleta, com gordura, crua","kcal":158.7,"p":21.4,"c":0.0,"f":7.5,"fb":0,"na":64.9,"cat":"Carnes e derivados"},{"id":374,"n":"Carne, bovina, paleta, sem gordura, cozida","kcal":193.7,"p":29.7,"c":0.0,"f":7.4,"fb":0,"na":57.6,"cat":"Carnes e derivados"},{"id":375,"n":"Carne, bovina, paleta, sem gordura, crua","kcal":140.9,"p":21.0,"c":0.0,"f":5.7,"fb":0,"na":65.9,"cat":"Carnes e derivados"},{"id":376,"n":"Carne, bovina, patinho, sem gordura, cru","kcal":133.5,"p":21.7,"c":0.0,"f":4.5,"fb":0,"na":49.1,"cat":"Carnes e derivados"},{"id":377,"n":"Carne, bovina, patinho, sem gordura, grelhado","kcal":219.3,"p":35.9,"c":0.0,"f":7.3,"fb":0,"na":60.3,"cat":"Carnes e derivados"},{"id":378,"n":"Carne, bovina, peito, sem gordura, cozido","kcal":338.5,"p":22.2,"c":0.0,"f":27.0,"fb":0,"na":55.7,"cat":"Carnes e derivados"},{"id":379,"n":"Carne, bovina, peito, sem gordura, cru","kcal":259.3,"p":17.6,"c":0.0,"f":20.4,"fb":0,"na":63.8,"cat":"Carnes e derivados"},{"id":380,"n":"Carne, bovina, picanha, com gordura, crua","kcal":212.9,"p":18.8,"c":0.0,"f":14.7,"fb":0,"na":37.6,"cat":"Carnes e derivados"},{"id":381,"n":"Carne, bovina, picanha, com gordura, grelhada","kcal":288.8,"p":26.4,"c":0.0,"f":19.5,"fb":0,"na":60.0,"cat":"Carnes e derivados"},{"id":382,"n":"Carne, bovina, picanha, sem gordura, crua","kcal":133.5,"p":21.2,"c":0.0,"f":4.7,"fb":0,"na":61.1,"cat":"Carnes e derivados"},{"id":383,"n":"Carne, bovina, picanha, sem gordura, grelhada","kcal":238.5,"p":31.9,"c":0.0,"f":11.3,"fb":0,"na":60.7,"cat":"Carnes e derivados"},{"id":384,"n":"Carne, bovina, seca, cozida","kcal":312.8,"p":26.9,"c":0.0,"f":21.9,"fb":0,"na":1943.2,"cat":"Carnes e derivados"},{"id":385,"n":"Carne, bovina, seca, crua","kcal":312.7,"p":19.7,"c":0.0,"f":25.4,"fb":0,"na":4439.6,"cat":"Carnes e derivados"},{"id":386,"n":"Coxinha de frango, frita","kcal":283.0,"p":9.6,"c":34.5,"f":11.8,"fb":5.0,"na":532.1,"cat":"Carnes e derivados"},{"id":387,"n":"Croquete, de carne, cru","kcal":245.8,"p":12.0,"c":13.9,"f":15.6,"fb":0,"na":710.6,"cat":"Carnes e derivados"},{"id":388,"n":"Croquete, de carne, frito","kcal":346.7,"p":16.9,"c":18.1,"f":22.7,"fb":0,"na":916.4,"cat":"Carnes e derivados"},{"id":389,"n":"Empada de frango, pré-cozida, assada","kcal":358.2,"p":6.9,"c":47.5,"f":15.6,"fb":2.2,"na":524.9,"cat":"Carnes e derivados"},{"id":390,"n":"Empada, de frango, pré-cozida","kcal":377.5,"p":7.3,"c":35.5,"f":22.9,"fb":2.2,"na":770.7,"cat":"Carnes e derivados"},{"id":391,"n":"Frango, asa, com pele, crua","kcal":213.2,"p":18.1,"c":0.0,"f":15.1,"fb":0,"na":96.3,"cat":"Carnes e derivados"},{"id":392,"n":"Frango, caipira, inteiro, com pele, cozido","kcal":242.9,"p":23.9,"c":0.0,"f":15.6,"fb":0,"na":56.1,"cat":"Carnes e derivados"},{"id":393,"n":"Frango, caipira, inteiro, sem pele, cozido","kcal":195.8,"p":29.6,"c":0.0,"f":7.7,"fb":0,"na":53.2,"cat":"Carnes e derivados"},{"id":394,"n":"Frango, coração, cru","kcal":221.5,"p":12.6,"c":0.0,"f":18.6,"fb":0,"na":95.1,"cat":"Carnes e derivados"},{"id":395,"n":"Frango, coração, grelhado","kcal":207.3,"p":22.4,"c":0.6,"f":12.1,"fb":0,"na":128.2,"cat":"Carnes e derivados"},{"id":396,"n":"Frango, coxa, com pele, assada","kcal":215.1,"p":28.5,"c":0.1,"f":10.4,"fb":0,"na":94.8,"cat":"Carnes e derivados"},{"id":397,"n":"Frango, coxa, com pele, crua","kcal":161.5,"p":17.1,"c":0.0,"f":9.8,"fb":0,"na":95.0,"cat":"Carnes e derivados"},{"id":398,"n":"Frango, coxa, sem pele, cozida","kcal":167.4,"p":26.9,"c":0.0,"f":5.8,"fb":0,"na":64.3,"cat":"Carnes e derivados"},{"id":399,"n":"Frango, coxa, sem pele, crua","kcal":119.9,"p":17.8,"c":0.0,"f":4.9,"fb":0,"na":98.4,"cat":"Carnes e derivados"},{"id":400,"n":"Frango, fígado, cru","kcal":106.5,"p":17.6,"c":-0.0,"f":3.5,"fb":0,"na":82.4,"cat":"Carnes e derivados"},{"id":401,"n":"Frango, filé, à milanesa","kcal":220.9,"p":28.5,"c":7.5,"f":7.8,"fb":1.1,"na":122.3,"cat":"Carnes e derivados"},{"id":402,"n":"Frango, inteiro, com pele, cru","kcal":226.3,"p":16.4,"c":0.0,"f":17.3,"fb":0,"na":62.9,"cat":"Carnes e derivados"},{"id":403,"n":"Frango, inteiro, sem pele, assado","kcal":187.3,"p":28.0,"c":0.0,"f":7.5,"fb":0,"na":70.3,"cat":"Carnes e derivados"},{"id":404,"n":"Frango, inteiro, sem pele, cozido","kcal":170.4,"p":25.0,"c":0.0,"f":7.1,"fb":0,"na":50.9,"cat":"Carnes e derivados"},{"id":405,"n":"Frango, inteiro, sem pele, cru","kcal":129.1,"p":20.6,"c":0.0,"f":4.6,"fb":0,"na":73.0,"cat":"Carnes e derivados"},{"id":406,"n":"Frango, peito, com pele, assado","kcal":211.7,"p":33.4,"c":0.0,"f":7.6,"fb":0,"na":55.7,"cat":"Carnes e derivados"},{"id":407,"n":"Frango, peito, com pele, cru","kcal":149.5,"p":20.8,"c":0.0,"f":6.7,"fb":0,"na":62.3,"cat":"Carnes e derivados"},{"id":408,"n":"Frango, peito, sem pele, cozido","kcal":162.9,"p":31.5,"c":0.0,"f":3.2,"fb":0,"na":36.2,"cat":"Carnes e derivados"},{"id":409,"n":"Frango, peito, sem pele, cru","kcal":119.2,"p":21.5,"c":0.0,"f":3.0,"fb":0,"na":56.1,"cat":"Carnes e derivados"},{"id":410,"n":"Frango, peito, sem pele, grelhado","kcal":159.2,"p":32.0,"c":0.0,"f":2.5,"fb":0,"na":50.2,"cat":"Carnes e derivados"},{"id":411,"n":"Frango, sobrecoxa, com pele, assada","kcal":259.6,"p":28.7,"c":0.0,"f":15.2,"fb":0,"na":95.9,"cat":"Carnes e derivados"},{"id":412,"n":"Frango, sobrecoxa, com pele, crua","kcal":254.5,"p":15.5,"c":0.0,"f":20.9,"fb":0,"na":68.3,"cat":"Carnes e derivados"},{"id":413,"n":"Frango, sobrecoxa, sem pele, assada","kcal":232.9,"p":29.2,"c":0.0,"f":12.0,"fb":0,"na":106.1,"cat":"Carnes e derivados"},{"id":414,"n":"Frango, sobrecoxa, sem pele, crua","kcal":161.8,"p":17.6,"c":0.0,"f":9.6,"fb":0,"na":79.7,"cat":"Carnes e derivados"},{"id":415,"n":"Hambúrguer, bovino, cru","kcal":214.8,"p":13.2,"c":4.2,"f":16.2,"fb":0,"na":869.5,"cat":"Carnes e derivados"},{"id":416,"n":"Hambúrguer, bovino, frito","kcal":258.3,"p":20.0,"c":6.3,"f":17.0,"fb":0,"na":1251.8,"cat":"Carnes e derivados"},{"id":417,"n":"Hambúrguer, bovino, grelhado","kcal":209.8,"p":13.2,"c":11.3,"f":12.4,"fb":0,"na":1090.3,"cat":"Carnes e derivados"},{"id":418,"n":"Lingüiça, frango, crua","kcal":218.1,"p":14.2,"c":0.0,"f":17.4,"fb":0,"na":1125.8,"cat":"Carnes e derivados"},{"id":419,"n":"Lingüiça, frango, frita","kcal":245.5,"p":18.3,"c":0.0,"f":18.5,"fb":0,"na":1373.9,"cat":"Carnes e derivados"},{"id":420,"n":"Lingüiça, frango, grelhada","kcal":243.7,"p":18.2,"c":0.0,"f":18.4,"fb":0,"na":1351.5,"cat":"Carnes e derivados"},{"id":421,"n":"Lingüiça, porco, crua","kcal":227.2,"p":16.1,"c":0.0,"f":17.6,"fb":0,"na":1175.7,"cat":"Carnes e derivados"},{"id":422,"n":"Lingüiça, porco, frita","kcal":279.5,"p":20.5,"c":0.0,"f":21.3,"fb":0,"na":1431.6,"cat":"Carnes e derivados"},{"id":423,"n":"Lingüiça, porco, grelhada","kcal":296.5,"p":23.2,"c":0.0,"f":21.9,"fb":0,"na":1455.9,"cat":"Carnes e derivados"},{"id":424,"n":"Mortadela","kcal":268.8,"p":12.0,"c":5.8,"f":21.6,"fb":0,"na":1212.2,"cat":"Carnes e derivados"},{"id":425,"n":"Peru, congelado, assado","kcal":163.1,"p":26.2,"c":0.0,"f":5.7,"fb":0,"na":627.9,"cat":"Carnes e derivados"},{"id":426,"n":"Peru, congelado, cru","kcal":93.7,"p":18.1,"c":0.0,"f":1.8,"fb":0,"na":710.7,"cat":"Carnes e derivados"},{"id":427,"n":"Porco, bisteca, crua","kcal":164.1,"p":21.5,"c":0.0,"f":8.0,"fb":0,"na":54.3,"cat":"Carnes e derivados"},{"id":428,"n":"Porco, bisteca, frita","kcal":311.2,"p":33.7,"c":0.0,"f":18.5,"fb":0,"na":63.0,"cat":"Carnes e derivados"},{"id":429,"n":"Porco, bisteca, grelhada","kcal":280.1,"p":28.9,"c":0.0,"f":17.4,"fb":0,"na":51.4,"cat":"Carnes e derivados"},{"id":430,"n":"Porco, costela, assada","kcal":402.2,"p":30.2,"c":0.0,"f":30.3,"fb":0,"na":62.7,"cat":"Carnes e derivados"},{"id":431,"n":"Porco, costela, crua","kcal":255.6,"p":18.0,"c":0.0,"f":19.8,"fb":0,"na":88.0,"cat":"Carnes e derivados"},{"id":432,"n":"Porco, lombo, assado","kcal":210.2,"p":35.7,"c":0.0,"f":6.4,"fb":0,"na":38.9,"cat":"Carnes e derivados"},{"id":433,"n":"Porco, lombo, cru","kcal":175.6,"p":22.6,"c":0.0,"f":8.8,"fb":0,"na":53.1,"cat":"Carnes e derivados"},{"id":434,"n":"Porco, orelha, salgada, crua","kcal":258.5,"p":18.5,"c":0.0,"f":19.9,"fb":0,"na":615.6,"cat":"Carnes e derivados"},{"id":435,"n":"Porco, pernil, assado","kcal":262.3,"p":32.1,"c":0.0,"f":13.9,"fb":0,"na":62.4,"cat":"Carnes e derivados"},{"id":436,"n":"Porco, pernil, cru","kcal":186.1,"p":20.1,"c":0.0,"f":11.1,"fb":0,"na":101.9,"cat":"Carnes e derivados"},{"id":437,"n":"Porco, rabo, salgado, cru","kcal":377.4,"p":15.6,"c":0.0,"f":34.5,"fb":0,"na":1157.7,"cat":"Carnes e derivados"},{"id":438,"n":"Presunto, com capa de gordura","kcal":127.8,"p":14.4,"c":1.4,"f":6.8,"fb":0,"na":1020.8,"cat":"Carnes e derivados"},{"id":439,"n":"Presunto, sem capa de gordura","kcal":93.7,"p":14.3,"c":2.1,"f":2.7,"fb":0,"na":1039.2,"cat":"Carnes e derivados"},{"id":440,"n":"Quibe, assado","kcal":136.2,"p":14.6,"c":12.9,"f":2.7,"fb":1.9,"na":39.9,"cat":"Carnes e derivados"},{"id":441,"n":"Quibe, cru","kcal":109.5,"p":12.4,"c":10.8,"f":1.7,"fb":1.6,"na":38.8,"cat":"Carnes e derivados"},{"id":442,"n":"Quibe, frito","kcal":253.8,"p":14.9,"c":12.3,"f":15.8,"fb":0,"na":835.8,"cat":"Carnes e derivados"},{"id":443,"n":"Salame","kcal":397.8,"p":25.8,"c":2.9,"f":30.6,"fb":0,"na":1574.2,"cat":"Carnes e derivados"},{"id":444,"n":"Toucinho, cru","kcal":592.5,"p":11.5,"c":0.0,"f":60.3,"fb":0,"na":49.6,"cat":"Carnes e derivados"},{"id":445,"n":"Toucinho, frito","kcal":696.6,"p":27.3,"c":0.0,"f":64.3,"fb":0,"na":124.9,"cat":"Carnes e derivados"},{"id":446,"n":"Bebida láctea, pêssego","kcal":55.2,"p":2.1,"c":7.6,"f":1.9,"fb":0.3,"na":46.3,"cat":"Leite e derivados"},{"id":447,"n":"Creme de Leite","kcal":221.5,"p":1.5,"c":4.5,"f":22.5,"fb":0,"na":51.7,"cat":"Leite e derivados"},{"id":448,"n":"Iogurte, natural","kcal":51.5,"p":4.1,"c":1.9,"f":3.0,"fb":0,"na":51.6,"cat":"Leite e derivados"},{"id":449,"n":"Iogurte, natural, desnatado","kcal":41.5,"p":3.8,"c":5.8,"f":0.3,"fb":0,"na":59.6,"cat":"Leite e derivados"},{"id":450,"n":"Iogurte, sabor abacaxi","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":0,"cat":"Leite e derivados"},{"id":451,"n":"Iogurte, sabor morango","kcal":69.6,"p":2.7,"c":9.7,"f":2.3,"fb":0.2,"na":37.7,"cat":"Leite e derivados"},{"id":452,"n":"Iogurte, sabor pêssego","kcal":67.8,"p":2.5,"c":9.4,"f":2.3,"fb":0.7,"na":37.0,"cat":"Leite e derivados"},{"id":453,"n":"Leite, condensado","kcal":312.6,"p":7.7,"c":57.0,"f":6.7,"fb":0,"na":93.8,"cat":"Leite e derivados"},{"id":454,"n":"Leite, de cabra","kcal":66.4,"p":3.1,"c":5.2,"f":3.8,"fb":0,"na":73.9,"cat":"Leite e derivados"},{"id":455,"n":"Leite, de vaca, achocolatado","kcal":82.8,"p":2.1,"c":14.2,"f":2.2,"fb":0.6,"na":71.7,"cat":"Leite e derivados"},{"id":456,"n":"Leite, de vaca, desnatado, pó","kcal":361.6,"p":34.7,"c":53.0,"f":0.9,"fb":0,"na":431.7,"cat":"Leite e derivados"},{"id":457,"n":"Leite, de vaca, desnatado, UHT","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":51.1,"cat":"Leite e derivados"},{"id":458,"n":"Leite, de vaca, integral","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":63.8,"cat":"Leite e derivados"},{"id":459,"n":"Leite, de vaca, integral, pó","kcal":496.7,"p":25.4,"c":39.2,"f":26.9,"fb":0,"na":323.2,"cat":"Leite e derivados"},{"id":460,"n":"Leite, fermentado","kcal":69.6,"p":1.9,"c":15.7,"f":0.1,"fb":0,"na":33.4,"cat":"Leite e derivados"},{"id":461,"n":"Queijo, minas, frescal","kcal":264.3,"p":17.4,"c":3.2,"f":20.2,"fb":0,"na":31.2,"cat":"Leite e derivados"},{"id":462,"n":"Queijo, minas, meia cura","kcal":320.7,"p":21.2,"c":3.6,"f":24.6,"fb":0,"na":501.2,"cat":"Leite e derivados"},{"id":463,"n":"Queijo, mozarela","kcal":329.9,"p":22.6,"c":3.0,"f":25.2,"fb":0,"na":581.4,"cat":"Leite e derivados"},{"id":464,"n":"Queijo, parmesão","kcal":453.0,"p":35.6,"c":1.7,"f":33.5,"fb":0,"na":1844.1,"cat":"Leite e derivados"},{"id":465,"n":"Queijo, pasteurizado","kcal":303.1,"p":9.4,"c":5.7,"f":27.4,"fb":0,"na":780.4,"cat":"Leite e derivados"},{"id":466,"n":"Queijo, petit suisse, morango","kcal":121.1,"p":5.8,"c":18.5,"f":2.8,"fb":0,"na":412.5,"cat":"Leite e derivados"},{"id":467,"n":"Queijo, prato","kcal":359.9,"p":22.7,"c":1.9,"f":29.1,"fb":0,"na":579.8,"cat":"Leite e derivados"},{"id":468,"n":"Queijo, requeijão, cremoso","kcal":256.6,"p":9.6,"c":2.4,"f":23.4,"fb":0,"na":557.9,"cat":"Leite e derivados"},{"id":469,"n":"Queijo, ricota","kcal":139.7,"p":12.6,"c":3.8,"f":8.1,"fb":0,"na":282.6,"cat":"Leite e derivados"},{"id":470,"n":"Bebida isotônica, sabores variados","kcal":25.6,"p":0.0,"c":6.4,"f":0.0,"fb":0,"na":44.1,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":471,"n":"Café, infusão 10%","kcal":9.1,"p":0.7,"c":1.5,"f":0.1,"fb":0,"na":1.0,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":472,"n":"Cana, aguardente 1","kcal":215.7,"p":0,"c":0,"f":0,"fb":0,"na":3.1,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":473,"n":"Cana, caldo de","kcal":65.3,"p":0.0,"c":18.2,"f":0.0,"fb":0.1,"na":0.0,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":474,"n":"Cerveja, pilsen 2","kcal":40.7,"p":0.6,"c":3.3,"f":0.0,"fb":0,"na":4.2,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":475,"n":"Chá, erva-doce, infusão 5%","kcal":1.4,"p":0.0,"c":0.4,"f":0.0,"fb":0,"na":0.6,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":476,"n":"Chá, mate, infusão 5%","kcal":2.7,"p":0.0,"c":0.6,"f":0.1,"fb":0,"na":0.0,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":477,"n":"Chá, preto, infusão 5%","kcal":2.2,"p":0.0,"c":0.6,"f":0.0,"fb":0,"na":0.0,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":478,"n":"Coco, água de","kcal":21.5,"p":0.0,"c":5.3,"f":0.0,"fb":0.1,"na":1.8,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":479,"n":"Refrigerante, tipo água tônica","kcal":30.8,"p":0.0,"c":8.0,"f":0.0,"fb":0,"na":8.3,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":480,"n":"Refrigerante, tipo cola","kcal":33.5,"p":0.0,"c":8.7,"f":0.0,"fb":0,"na":7.1,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":481,"n":"Refrigerante, tipo guaraná","kcal":38.7,"p":0.0,"c":10.0,"f":0.0,"fb":0,"na":9.0,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":482,"n":"Refrigerante, tipo laranja","kcal":45.6,"p":0.0,"c":11.8,"f":0.0,"fb":0,"na":9.3,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":483,"n":"Refrigerante, tipo limão","kcal":39.7,"p":0.0,"c":10.3,"f":0.0,"fb":0,"na":8.8,"cat":"Bebidas (alcoólicas e não alcoólicas)"},{"id":484,"n":"Omelete, de queijo","kcal":268.0,"p":15.6,"c":0.4,"f":22.0,"fb":0,"na":216.1,"cat":"Ovos e derivados"},{"id":485,"n":"Ovo, de codorna, inteiro, cru","kcal":176.9,"p":13.7,"c":0.8,"f":12.7,"fb":0,"na":129.0,"cat":"Ovos e derivados"},{"id":486,"n":"Ovo, de galinha, clara, cozida/10minutos","kcal":59.4,"p":13.4,"c":0.0,"f":0.1,"fb":0,"na":180.5,"cat":"Ovos e derivados"},{"id":487,"n":"Ovo, de galinha, gema, cozida/10minutos","kcal":352.7,"p":15.9,"c":1.6,"f":30.8,"fb":0,"na":44.9,"cat":"Ovos e derivados"},{"id":488,"n":"Ovo, de galinha, inteiro, cozido/10minutos","kcal":145.7,"p":13.3,"c":0.6,"f":9.5,"fb":0,"na":145.9,"cat":"Ovos e derivados"},{"id":489,"n":"Ovo, de galinha, inteiro, cru","kcal":143.1,"p":13.0,"c":1.6,"f":8.9,"fb":0,"na":167.9,"cat":"Ovos e derivados"},{"id":490,"n":"Ovo, de galinha, inteiro, frito","kcal":240.2,"p":15.6,"c":1.2,"f":18.6,"fb":0,"na":166.1,"cat":"Ovos e derivados"},{"id":491,"n":"Achocolatado, pó","kcal":401.0,"p":4.2,"c":91.2,"f":2.2,"fb":3.9,"na":64.8,"cat":"Produtos açucarados"},{"id":492,"n":"Açúcar, cristal","kcal":386.8,"p":0.3,"c":99.6,"f":0.0,"fb":0,"na":0.0,"cat":"Produtos açucarados"},{"id":493,"n":"Açúcar, mascavo","kcal":368.6,"p":0.8,"c":94.5,"f":0.1,"fb":0,"na":25.2,"cat":"Produtos açucarados"},{"id":494,"n":"Açúcar, refinado","kcal":386.6,"p":0.3,"c":99.5,"f":0.0,"fb":0,"na":12.2,"cat":"Produtos açucarados"},{"id":495,"n":"Chocolate, ao leite","kcal":539.6,"p":7.2,"c":59.6,"f":30.3,"fb":2.2,"na":77.1,"cat":"Produtos açucarados"},{"id":496,"n":"Chocolate, ao leite, com castanha do Pará","kcal":558.9,"p":7.4,"c":55.4,"f":34.2,"fb":2.5,"na":64.0,"cat":"Produtos açucarados"},{"id":497,"n":"Chocolate, ao leite, dietético","kcal":556.8,"p":6.9,"c":56.3,"f":33.8,"fb":2.8,"na":84.7,"cat":"Produtos açucarados"},{"id":498,"n":"Chocolate, meio amargo","kcal":474.9,"p":4.9,"c":62.4,"f":29.9,"fb":4.9,"na":8.9,"cat":"Produtos açucarados"},{"id":499,"n":"Cocada branca","kcal":448.8,"p":1.1,"c":81.4,"f":13.6,"fb":3.6,"na":29.0,"cat":"Produtos açucarados"},{"id":500,"n":"Doce, de abóbora, cremoso","kcal":198.9,"p":0.9,"c":54.6,"f":0.2,"fb":2.3,"na":0.0,"cat":"Produtos açucarados"},{"id":501,"n":"Doce, de leite, cremoso","kcal":306.3,"p":5.5,"c":59.5,"f":6.0,"fb":0,"na":120.1,"cat":"Produtos açucarados"},{"id":502,"n":"Geléia, mocotó, natural","kcal":106.1,"p":2.1,"c":24.2,"f":0.1,"fb":0,"na":42.7,"cat":"Produtos açucarados"},{"id":503,"n":"Glicose de milho","kcal":292.1,"p":0.0,"c":79.4,"f":0.0,"fb":0,"na":58.9,"cat":"Produtos açucarados"},{"id":504,"n":"Maria mole","kcal":301.2,"p":3.8,"c":73.6,"f":0.2,"fb":0.7,"na":15.3,"cat":"Produtos açucarados"},{"id":505,"n":"Maria mole, coco queimado","kcal":306.6,"p":3.9,"c":75.1,"f":0.1,"fb":0.6,"na":14.3,"cat":"Produtos açucarados"},{"id":506,"n":"Marmelada","kcal":257.2,"p":0.4,"c":70.8,"f":0.1,"fb":4.1,"na":10.9,"cat":"Produtos açucarados"},{"id":507,"n":"Mel, de abelha","kcal":309.2,"p":0.0,"c":84.0,"f":0.0,"fb":0,"na":6.0,"cat":"Produtos açucarados"},{"id":508,"n":"Melado","kcal":296.5,"p":0.0,"c":76.6,"f":0.0,"fb":0,"na":4.0,"cat":"Produtos açucarados"},{"id":509,"n":"Quindim","kcal":411.3,"p":4.7,"c":46.3,"f":24.4,"fb":3.2,"na":27.4,"cat":"Produtos açucarados"},{"id":510,"n":"Rapadura","kcal":352.0,"p":1.0,"c":90.8,"f":0.1,"fb":0,"na":21.7,"cat":"Produtos açucarados"},{"id":511,"n":"Café, pó, torrado","kcal":418.6,"p":14.7,"c":65.8,"f":11.9,"fb":51.2,"na":1.1,"cat":"Miscelâneas"},{"id":512,"n":"Capuccino, pó","kcal":417.4,"p":11.3,"c":73.6,"f":8.6,"fb":2.4,"na":382.3,"cat":"Miscelâneas"},{"id":513,"n":"Fermento em pó, químico","kcal":89.7,"p":0.5,"c":43.9,"f":0.1,"fb":0,"na":10052.4,"cat":"Miscelâneas"},{"id":514,"n":"Fermento, biológico, levedura, tablete","kcal":89.8,"p":17.0,"c":7.7,"f":1.5,"fb":4.2,"na":39.6,"cat":"Miscelâneas"},{"id":515,"n":"Gelatina, sabores variados, pó","kcal":380.2,"p":8.9,"c":89.2,"f":0.0,"fb":0,"na":234.9,"cat":"Miscelâneas"},{"id":516,"n":"Sal, dietético","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":23431.5,"cat":"Miscelâneas"},{"id":517,"n":"Sal, grosso","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":39943.2,"cat":"Miscelâneas"},{"id":518,"n":"Shoyu","kcal":60.9,"p":3.3,"c":11.6,"f":0.3,"fb":0,"na":5024.2,"cat":"Miscelâneas"},{"id":519,"n":"Tempero a base de sal","kcal":21.3,"p":2.7,"c":2.1,"f":0.3,"fb":0.6,"na":32560.0,"cat":"Miscelâneas"},{"id":520,"n":"Azeitona, preta, conserva","kcal":194.2,"p":1.2,"c":5.5,"f":20.3,"fb":4.6,"na":1566.7,"cat":"Outros alimentos industrializados"},{"id":521,"n":"Azeitona, verde, conserva","kcal":136.9,"p":0.9,"c":4.1,"f":14.2,"fb":3.8,"na":1347.2,"cat":"Outros alimentos industrializados"},{"id":522,"n":"Chantilly, spray, com gordura vegetal","kcal":315.0,"p":0.5,"c":16.9,"f":27.3,"fb":0,"na":109.7,"cat":"Outros alimentos industrializados"},{"id":523,"n":"Leite, de coco","kcal":166.2,"p":1.0,"c":2.2,"f":18.4,"fb":0.7,"na":44.3,"cat":"Outros alimentos industrializados"},{"id":524,"n":"Maionese, tradicional com ovos","kcal":302.2,"p":0.6,"c":7.9,"f":30.5,"fb":0,"na":786.8,"cat":"Outros alimentos industrializados"},{"id":525,"n":"Acarajé","kcal":289.2,"p":8.3,"c":19.1,"f":19.9,"fb":9.4,"na":304.9,"cat":"Alimentos preparados"},{"id":526,"n":"Arroz carreteiro","kcal":153.8,"p":10.8,"c":11.6,"f":7.1,"fb":1.5,"na":1621.7,"cat":"Alimentos preparados"},{"id":527,"n":"Baião de dois, arroz e feijão-de-corda","kcal":135.7,"p":6.2,"c":20.4,"f":3.2,"fb":5.1,"na":93.3,"cat":"Alimentos preparados"},{"id":528,"n":"Barreado","kcal":165.0,"p":18.3,"c":0.2,"f":9.5,"fb":0.1,"na":47.6,"cat":"Alimentos preparados"},{"id":529,"n":"Bife à cavalo, com contra filé","kcal":291.2,"p":23.7,"c":0.0,"f":21.1,"fb":0,"na":82.9,"cat":"Alimentos preparados"},{"id":530,"n":"Bolinho de arroz","kcal":273.5,"p":8.0,"c":41.7,"f":8.3,"fb":2.7,"na":58.9,"cat":"Alimentos preparados"},{"id":531,"n":"Camarão à baiana","kcal":100.8,"p":7.9,"c":3.2,"f":6.0,"fb":0.4,"na":84.8,"cat":"Alimentos preparados"},{"id":532,"n":"Charuto, de repolho","kcal":78.2,"p":6.8,"c":10.1,"f":1.1,"fb":1.5,"na":12.1,"cat":"Alimentos preparados"},{"id":533,"n":"Cuscuz, de milho, cozido com sal","kcal":113.5,"p":2.2,"c":25.3,"f":0.7,"fb":2.1,"na":247.7,"cat":"Alimentos preparados"},{"id":534,"n":"Cuscuz, paulista","kcal":142.1,"p":2.6,"c":22.5,"f":4.6,"fb":2.4,"na":235.7,"cat":"Alimentos preparados"},{"id":535,"n":"Cuxá, molho","kcal":80.1,"p":5.6,"c":5.7,"f":3.6,"fb":3.0,"na":1344.3,"cat":"Alimentos preparados"},{"id":536,"n":"Dobradinha","kcal":124.5,"p":19.8,"c":0.0,"f":4.4,"fb":0,"na":28.8,"cat":"Alimentos preparados"},{"id":537,"n":"Estrogonofe de carne","kcal":173.1,"p":15.0,"c":3.0,"f":10.8,"fb":0,"na":122.8,"cat":"Alimentos preparados"},{"id":538,"n":"Estrogonofe de frango","kcal":156.8,"p":17.6,"c":2.6,"f":8.0,"fb":0,"na":99.5,"cat":"Alimentos preparados"},{"id":539,"n":"Feijão tropeiro mineiro","kcal":151.6,"p":10.2,"c":19.6,"f":6.8,"fb":3.6,"na":365.1,"cat":"Alimentos preparados"},{"id":540,"n":"Feijoada","kcal":116.9,"p":8.7,"c":11.6,"f":6.5,"fb":5.1,"na":278.2,"cat":"Alimentos preparados"},{"id":541,"n":"Frango, com açafrão","kcal":112.8,"p":9.7,"c":4.1,"f":6.2,"fb":0.2,"na":28.8,"cat":"Alimentos preparados"},{"id":542,"n":"Macarrão, molho bolognesa","kcal":119.5,"p":4.9,"c":22.5,"f":0.9,"fb":0.8,"na":8.9,"cat":"Alimentos preparados"},{"id":543,"n":"Maniçoba","kcal":134.2,"p":10.0,"c":3.4,"f":8.7,"fb":2.2,"na":406.7,"cat":"Alimentos preparados"},{"id":544,"n":"Quibebe","kcal":86.3,"p":8.6,"c":6.6,"f":2.7,"fb":1.7,"na":246.6,"cat":"Alimentos preparados"},{"id":545,"n":"Salada, de legumes, com maionese","kcal":96.1,"p":1.1,"c":8.9,"f":7.0,"fb":2.2,"na":228.4,"cat":"Alimentos preparados"},{"id":546,"n":"Salada, de legumes, cozida no vapor","kcal":35.4,"p":2.0,"c":7.1,"f":0.3,"fb":2.5,"na":2.5,"cat":"Alimentos preparados"},{"id":547,"n":"Salpicão, de frango","kcal":147.9,"p":13.9,"c":4.6,"f":7.8,"fb":0.4,"na":248.3,"cat":"Alimentos preparados"},{"id":548,"n":"Sarapatel","kcal":123.0,"p":18.5,"c":1.1,"f":4.4,"fb":0,"na":215.6,"cat":"Alimentos preparados"},{"id":549,"n":"Tabule","kcal":57.5,"p":2.0,"c":10.6,"f":1.2,"fb":2.1,"na":1.2,"cat":"Alimentos preparados"},{"id":550,"n":"Tacacá","kcal":46.9,"p":7.0,"c":3.4,"f":0.4,"fb":0.2,"na":1349.1,"cat":"Alimentos preparados"},{"id":551,"n":"Tapioca, com manteiga","kcal":347.8,"p":0.1,"c":63.6,"f":10.9,"fb":0.0,"na":157.5,"cat":"Alimentos preparados"},{"id":552,"n":"Tucupi, com pimenta-de-cheiro","kcal":27.2,"p":2.1,"c":4.7,"f":0.3,"fb":0.2,"na":5.1,"cat":"Alimentos preparados"},{"id":553,"n":"Vaca atolada","kcal":144.9,"p":5.1,"c":10.1,"f":9.3,"fb":2.3,"na":25.6,"cat":"Alimentos preparados"},{"id":554,"n":"Vatapá","kcal":254.9,"p":6.0,"c":9.7,"f":23.2,"fb":1.7,"na":879.9,"cat":"Alimentos preparados"},{"id":555,"n":"Virado à paulista","kcal":306.9,"p":10.2,"c":14.1,"f":25.6,"fb":2.2,"na":345.5,"cat":"Alimentos preparados"},{"id":556,"n":"Yakisoba","kcal":112.8,"p":7.5,"c":18.3,"f":2.6,"fb":1.1,"na":793.8,"cat":"Alimentos preparados"},{"id":557,"n":"Amendoim, grão, cru","kcal":544.1,"p":27.2,"c":20.3,"f":43.9,"fb":8.0,"na":0.0,"cat":"Leguminosas e derivados"},{"id":558,"n":"Amendoim, torrado, salgado","kcal":605.8,"p":22.5,"c":18.7,"f":54.0,"fb":7.8,"na":375.7,"cat":"Leguminosas e derivados"},{"id":559,"n":"Ervilha, em vagem","kcal":88.1,"p":7.5,"c":14.2,"f":0.5,"fb":9.7,"na":0.0,"cat":"Leguminosas e derivados"},{"id":560,"n":"Ervilha, enlatada, drenada","kcal":73.8,"p":4.6,"c":13.4,"f":0.4,"fb":5.1,"na":372.1,"cat":"Leguminosas e derivados"},{"id":561,"n":"Feijão, carioca, cozido","kcal":76.4,"p":4.8,"c":13.6,"f":0.5,"fb":8.5,"na":1.8,"cat":"Leguminosas e derivados"},{"id":562,"n":"Feijão, carioca, cru","kcal":329.0,"p":20.0,"c":61.2,"f":1.3,"fb":18.4,"na":0.0,"cat":"Leguminosas e derivados"},{"id":563,"n":"Feijão, fradinho, cozido","kcal":78.0,"p":5.1,"c":13.5,"f":0.6,"fb":7.5,"na":1.0,"cat":"Leguminosas e derivados"},{"id":564,"n":"Feijão, fradinho, cru","kcal":339.2,"p":20.2,"c":61.2,"f":2.4,"fb":23.6,"na":10.3,"cat":"Leguminosas e derivados"},{"id":565,"n":"Feijão, jalo, cozido","kcal":92.7,"p":6.1,"c":16.5,"f":0.5,"fb":13.9,"na":0.5,"cat":"Leguminosas e derivados"},{"id":566,"n":"Feijão, jalo, cru","kcal":327.9,"p":20.1,"c":61.5,"f":0.9,"fb":30.3,"na":24.6,"cat":"Leguminosas e derivados"},{"id":567,"n":"Feijão, preto, cozido","kcal":77.0,"p":4.5,"c":14.0,"f":0.5,"fb":8.4,"na":1.9,"cat":"Leguminosas e derivados"},{"id":568,"n":"Feijão, preto, cru","kcal":323.6,"p":21.3,"c":58.8,"f":1.2,"fb":21.8,"na":0.0,"cat":"Leguminosas e derivados"},{"id":569,"n":"Feijão, rajado, cozido","kcal":84.7,"p":5.5,"c":15.3,"f":0.4,"fb":9.3,"na":0.7,"cat":"Leguminosas e derivados"},{"id":570,"n":"Feijão, rajado, cru","kcal":325.8,"p":17.3,"c":62.9,"f":1.2,"fb":24.0,"na":13.7,"cat":"Leguminosas e derivados"},{"id":571,"n":"Feijão, rosinha, cozido","kcal":67.9,"p":4.5,"c":11.8,"f":0.5,"fb":4.8,"na":2.1,"cat":"Leguminosas e derivados"},{"id":572,"n":"Feijão, rosinha, cru","kcal":337.0,"p":20.9,"c":62.2,"f":1.3,"fb":20.6,"na":24.1,"cat":"Leguminosas e derivados"},{"id":573,"n":"Feijão, roxo, cozido","kcal":76.9,"p":5.7,"c":12.9,"f":0.5,"fb":11.5,"na":1.5,"cat":"Leguminosas e derivados"},{"id":574,"n":"Feijão, roxo, cru","kcal":331.4,"p":22.2,"c":60.0,"f":1.2,"fb":33.8,"na":9.8,"cat":"Leguminosas e derivados"},{"id":575,"n":"Grão-de-bico, cru","kcal":354.7,"p":21.2,"c":57.9,"f":5.4,"fb":12.4,"na":5.2,"cat":"Leguminosas e derivados"},{"id":576,"n":"Guandu, cru","kcal":344.1,"p":19.0,"c":64.0,"f":2.1,"fb":21.3,"na":1.6,"cat":"Leguminosas e derivados"},{"id":577,"n":"Lentilha, cozida","kcal":92.6,"p":6.3,"c":16.3,"f":0.5,"fb":7.9,"na":1.2,"cat":"Leguminosas e derivados"},{"id":578,"n":"Lentilha, crua","kcal":339.1,"p":23.2,"c":62.0,"f":0.8,"fb":16.9,"na":0.0,"cat":"Leguminosas e derivados"},{"id":579,"n":"Paçoca, amendoim","kcal":486.9,"p":16.0,"c":52.4,"f":26.1,"fb":7.3,"na":166.8,"cat":"Leguminosas e derivados"},{"id":580,"n":"Pé-de-moleque, amendoim","kcal":503.2,"p":13.2,"c":54.7,"f":28.0,"fb":3.4,"na":16.3,"cat":"Leguminosas e derivados"},{"id":581,"n":"Soja, farinha","kcal":404.0,"p":36.0,"c":38.4,"f":14.6,"fb":20.2,"na":5.8,"cat":"Leguminosas e derivados"},{"id":582,"n":"Soja, extrato solúvel, natural, fluido","kcal":39.1,"p":2.4,"c":4.3,"f":1.6,"fb":0.4,"na":56.5,"cat":"Leguminosas e derivados"},{"id":583,"n":"Soja, extrato solúvel, pó","kcal":458.9,"p":35.7,"c":28.5,"f":26.2,"fb":7.3,"na":83.5,"cat":"Leguminosas e derivados"},{"id":584,"n":"Soja, queijo (tofu)","kcal":64.5,"p":6.6,"c":2.1,"f":4.0,"fb":0.8,"na":1.2,"cat":"Leguminosas e derivados"},{"id":585,"n":"Tremoço, cru","kcal":381.3,"p":33.6,"c":43.8,"f":10.3,"fb":32.3,"na":3.3,"cat":"Leguminosas e derivados"},{"id":586,"n":"Tremoço, em conserva","kcal":120.6,"p":11.1,"c":12.4,"f":3.8,"fb":14.4,"na":1808.8,"cat":"Leguminosas e derivados"},{"id":587,"n":"Amêndoa, torrada, salgada","kcal":580.7,"p":18.6,"c":29.5,"f":47.3,"fb":11.6,"na":278.5,"cat":"Nozes e sementes"},{"id":588,"n":"Castanha-de-caju, torrada, salgada","kcal":570.2,"p":18.5,"c":29.1,"f":46.3,"fb":3.7,"na":125.0,"cat":"Nozes e sementes"},{"id":589,"n":"Castanha-do-Brasil, crua","kcal":643.0,"p":14.5,"c":15.1,"f":63.5,"fb":7.9,"na":0.7,"cat":"Nozes e sementes"},{"id":590,"n":"Coco, cru","kcal":406.5,"p":3.7,"c":10.4,"f":42.0,"fb":5.4,"na":15.3,"cat":"Nozes e sementes"},{"id":591,"n":"Coco,  verde, cru","kcal":0,"p":0,"c":0,"f":0,"fb":0,"na":0,"cat":"Nozes e sementes"},{"id":592,"n":"Farinha, de mesocarpo de babaçu, crua","kcal":328.8,"p":1.4,"c":79.2,"f":0.2,"fb":17.9,"na":12.5,"cat":"Nozes e sementes"},{"id":593,"n":"Gergelim, semente","kcal":583.5,"p":21.2,"c":21.6,"f":50.4,"fb":11.9,"na":2.6,"cat":"Nozes e sementes"},{"id":594,"n":"Linhaça, semente","kcal":495.1,"p":14.1,"c":43.3,"f":32.3,"fb":33.5,"na":8.7,"cat":"Nozes e sementes"},{"id":595,"n":"Pinhão, cozido","kcal":174.4,"p":3.0,"c":43.9,"f":0.7,"fb":15.6,"na":0.9,"cat":"Nozes e sementes"},{"id":596,"n":"Pupunha, cozida","kcal":218.5,"p":2.5,"c":29.6,"f":12.8,"fb":4.3,"na":0.9,"cat":"Nozes e sementes"},{"id":597,"n":"Noz, crua","kcal":620.1,"p":14.0,"c":18.4,"f":59.4,"fb":7.2,"na":4.6,"cat":"Nozes e sementes"}];
+</script>
+<script>
+/* ============ estado & armazenamento ============ */
+const STORE_KEY = 'balanco_calorico_v1';
+const todayStr = (d)=> {
+  const dt = d ? new Date(d) : new Date();
+  const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), day=String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+};
+const DEFAULT_MEALS = ['Café da manhã','Almoço','Lanche da tarde','Jantar'];
+function defaultState(){
+  return {
+    settings:{ goalKcal:2000, theme:'light', meals: DEFAULT_MEALS.slice(),
+      calc:{ sex:'f', age:30, weight:65, height:165, activity:1.375, objetivo:0 } },
+    logs:{}, customFoods:[]
+  };
+}
+function loadState(){
+  let s;
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    s = raw ? JSON.parse(raw) : defaultState();
+  }catch(e){ console.error('erro ao carregar estado', e); s = defaultState(); }
+  // migração: garantir todos os campos esperados existam
+  if(!s.settings) s.settings = defaultState().settings;
+  if(!s.customFoods) s.customFoods = [];
+  if(!s.logs) s.logs = {};
+  if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
+  if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
+  // versões antigas guardavam goalMode/goalType/sex/etc direto em settings — se existir e goalKcal
+  // ainda não tiver sido calculado a partir disso, resolve para um número simples agora.
+  if(s.settings.goalMode === 'calc' && s.settings.weight && s.settings.height){
+    const bmr = s.settings.sex==='m'
+      ? 10*s.settings.weight + 6.25*s.settings.height - 5*(s.settings.age||30) + 5
+      : 10*s.settings.weight + 6.25*s.settings.height - 5*(s.settings.age||30) - 161;
+    s.settings.goalKcal = Math.round(bmr*(s.settings.activity||1.375) + (s.settings.goalType||0));
+  }
+  delete s.settings.goalMode;
+  if(!s.settings.goalKcal) s.settings.goalKcal = 2000;
+  return s;
+}
+let state = loadState();
+
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('erro ao salvar estado', e); alert('Não foi possível salvar os dados (armazenamento local indisponível).'); }
+}
+
+/* ============ base de alimentos (TACO + custom) ============ */
+function normalize(s){
+  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function allFoods(){
+  return TACO_DATA.concat(state.customFoods || []);
+}
+
+/* ============ navegação por abas ============ */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const views = { hoje: document.getElementById('view-hoje'), semana: document.getElementById('view-semana'), calc: document.getElementById('view-calc'), config: document.getElementById('view-config') };
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tabBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.values(views).forEach(v=>v.classList.remove('active'));
+    views[btn.dataset.view].classList.add('active');
+    if(btn.dataset.view==='semana') renderWeek();
+    if(btn.dataset.view==='calc') syncCalcForm();
+    if(btn.dataset.view==='config') syncConfigForm();
+  });
+});
+
+/* ============ tema ============ */
+const themeToggle = document.getElementById('themeToggle');
+const themeSelect = document.getElementById('themeSelect');
+function applyTheme(t){
+  document.body.setAttribute('data-theme', t);
+  themeToggle.textContent = t==='dark' ? '☀️' : '🌙';
+  themeSelect.value = t;
+  state.settings.theme = t; saveState();
+}
+applyTheme(state.settings.theme || 'light');
+themeToggle.addEventListener('click', ()=> applyTheme(document.body.getAttribute('data-theme')==='dark' ? 'light':'dark'));
+themeSelect.addEventListener('change', e=> applyTheme(e.target.value));
+
+/* ============ dia atual ============ */
+let currentDate = new Date();
+const dayLabel = document.getElementById('dayLabel');
+const dayDate = document.getElementById('dayDate');
+const labelDate = document.getElementById('labelDate');
+function fmtLongDate(d){
+  return d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+}
+function refreshDateHeader(){
+  const key = todayStr(currentDate);
+  const isToday = key === todayStr(new Date());
+  const yest = new Date(); yest.setDate(yest.getDate()-1);
+  const isYest = key === todayStr(yest);
+  dayLabel.textContent = isToday ? 'Hoje' : isYest ? 'Ontem' : currentDate.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric'});
+  dayDate.textContent = fmtLongDate(currentDate);
+  labelDate.textContent = fmtLongDate(currentDate);
+}
+document.getElementById('dayPrev').addEventListener('click', ()=>{ currentDate.setDate(currentDate.getDate()-1); refreshDateHeader(); renderLog(); });
+document.getElementById('dayNext').addEventListener('click', ()=>{ currentDate.setDate(currentDate.getDate()+1); refreshDateHeader(); renderLog(); });
+
+/* ============ refeições ============ */
+const mealSelect = document.getElementById('mealSelect');
+function populateMealSelect(){
+  const meals = state.settings.meals || [];
+  const prev = mealSelect.value;
+  mealSelect.innerHTML = meals.map(m=>`<option value="${m}">${m}</option>`).join('')
+    + `<option value="__SEM__">Sem refeição</option>`;
+  if(meals.includes(prev)) mealSelect.value = prev;
+}
+
+/* ============ busca de alimentos ============ */
+const foodSearch = document.getElementById('foodSearch');
+const suggBox = document.getElementById('suggBox');
+const qtyInput = document.getElementById('qtyInput');
+const selectedBar = document.getElementById('selectedBar');
+let highlightIdx = -1;
+let currentResults = [];
+let selectedFood = null;
+
+function tokenize(str){
+  return normalize(str).replace(/[.,;()\/]/g,' ').split(/\s+/).filter(Boolean);
+}
+// pontua um alimento: cada palavra digitada precisa aparecer em algum lugar do nome
+// (ou categoria, como reforço), em qualquer ordem — quanto mais cedo aparece, melhor a posição
+function scoreFood(combinedNorm, tokens){
+  let score = 0;
+  for(const t of tokens){
+    const idx = combinedNorm.indexOf(t);
+    if(idx === -1) return -1;
+    score += idx;
+  }
+  return score;
+}
+function renderSuggestions(query){
+  const tokens = tokenize(query);
+  if(tokens.length===0){ suggBox.style.display='none'; return; }
+  const foods = allFoods();
+  const scored = [];
+  for(const f of foods){
+    const combined = normalize(f.n).replace(/[.,;()\/]/g,' ') + ' ' + normalize(f.cat||'');
+    const sc = scoreFood(combined, tokens);
+    if(sc>=0) scored.push({f, sc});
+  }
+  scored.sort((a,b)=> a.sc-b.sc);
+  const results = scored.slice(0,40).map(x=>x.f);
+  currentResults = results;
+  highlightIdx = results.length ? 0 : -1;
+  if(results.length===0){
+    suggBox.innerHTML = `<div class="empty">Nenhum alimento encontrado para "${query}".</div>
+      <div class="addcustom" id="addCustomOpt">+ Cadastrar "${query}" como alimento personalizado</div>`;
+    suggBox.style.display='block';
+    document.getElementById('addCustomOpt').addEventListener('click', ()=> openFoodModal(query));
+    return;
+  }
+  suggBox.innerHTML = results.map((f,i)=>`
+    <div class="sug-item${i===0?' hl':''}" data-idx="${i}">
+      <span class="nm">${f.n}</span>
+      <span class="cat">${f.cat||'personalizado'}</span>
+      <span class="kc">${f.kcal} kcal/100g</span>
+    </div>`).join('');
+  suggBox.style.display='block';
+  suggBox.querySelectorAll('.sug-item').forEach(el=>{
+    el.addEventListener('click', ()=> selectFood(currentResults[parseInt(el.dataset.idx)]));
+  });
+}
+foodSearch.addEventListener('input', (e)=>{ clearSelection(); renderSuggestions(e.target.value); });
+foodSearch.addEventListener('keydown', (e)=>{
+  const items = suggBox.querySelectorAll('.sug-item');
+  if(e.key==='ArrowDown'){ e.preventDefault(); highlightIdx=Math.min(highlightIdx+1, items.length-1); updateHl(items); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); highlightIdx=Math.max(highlightIdx-1,0); updateHl(items); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(highlightIdx>=0 && currentResults[highlightIdx]) selectFood(currentResults[highlightIdx]); }
+  else if(e.key==='Escape'){ suggBox.style.display='none'; }
+});
+function updateHl(items){ items.forEach((it,i)=> it.classList.toggle('hl', i===highlightIdx)); if(items[highlightIdx]) items[highlightIdx].scrollIntoView({block:'nearest'}); }
+document.addEventListener('click', (e)=>{ if(!e.target.closest('.search-box')) suggBox.style.display='none'; });
+
+/* ============ modal: novo alimento personalizado ============ */
+const foodModalOverlay = document.getElementById('foodModalOverlay');
+function openFoodModal(prefillName){
+  document.getElementById('nfName').value = prefillName || '';
+  document.getElementById('nfCat').value = '';
+  document.getElementById('nfKcal').value = '';
+  document.getElementById('nfP').value = '';
+  document.getElementById('nfC').value = '';
+  document.getElementById('nfF').value = '';
+  document.getElementById('nfFb').value = '';
+  document.getElementById('nfNa').value = '';
+  foodModalOverlay.style.display = 'flex';
+  suggBox.style.display = 'none';
+  const nameField = document.getElementById('nfName');
+  nameField.focus();
+  if(prefillName){ document.getElementById('nfKcal').focus(); } else { nameField.focus(); }
+}
+function closeFoodModal(){ foodModalOverlay.style.display = 'none'; }
+document.getElementById('newFoodBtn').addEventListener('click', ()=> openFoodModal(foodSearch.value.trim()));
+document.getElementById('closeFoodModal').addEventListener('click', closeFoodModal);
+document.getElementById('cancelFoodModal').addEventListener('click', closeFoodModal);
+foodModalOverlay.addEventListener('click', (e)=>{ if(e.target===foodModalOverlay) closeFoodModal(); });
+document.getElementById('saveFoodModal').addEventListener('click', ()=>{
+  const name = document.getElementById('nfName').value.trim();
+  const kcal = parseFloat(document.getElementById('nfKcal').value);
+  if(!name){ alert('Digite um nome para o alimento.'); document.getElementById('nfName').focus(); return; }
+  if(isNaN(kcal)){ alert('Informe as calorias por 100g.'); document.getElementById('nfKcal').focus(); return; }
+  const newFood = {
+    id: 'custom_'+Date.now(), n:name,
+    kcal,
+    p: parseFloat(document.getElementById('nfP').value) || 0,
+    c: parseFloat(document.getElementById('nfC').value) || 0,
+    f: parseFloat(document.getElementById('nfF').value) || 0,
+    fb: parseFloat(document.getElementById('nfFb').value) || 0,
+    na: parseFloat(document.getElementById('nfNa').value) || 0,
+    cat: document.getElementById('nfCat').value.trim() || 'Personalizado',
+  };
+  state.customFoods.push(newFood); saveState();
+  closeFoodModal();
+  foodSearch.value = '';
+  selectFood(newFood);
+  renderCustomFoodChips();
+});
+function renderCustomFoodChips(){
+  const box = document.getElementById('customFoodChips');
+  const list = state.customFoods || [];
+  if(list.length===0){
+    box.innerHTML = `<span style="color:var(--ink-soft);font-size:12.5px;">Nenhum alimento personalizado cadastrado ainda.</span>`;
+    return;
+  }
+  box.innerHTML = list.map((f,i)=>`
+    <span class="meal-chip" title="${f.kcal} kcal/100g">${f.n}<button data-i="${i}" title="Remover">✕</button></span>`).join('');
+  box.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(confirm(`Remover "${list[b.dataset.i].n}" dos alimentos personalizados? Itens já lançados em dias anteriores continuam no histórico.`)){
+        state.customFoods.splice(parseInt(b.dataset.i),1);
+        saveState(); renderCustomFoodChips();
+      }
+    });
+  });
+}
+
+/* seleciona o alimento (ainda não salva) e mostra a barra pra ajustar quantidade antes de confirmar */
+function selectFood(f){
+  if(!f) return;
+  selectedFood = f;
+  suggBox.style.display='none';
+  document.getElementById('selectedFoodName').textContent = f.n;
+  document.getElementById('selectedFoodKcal').textContent = `${f.kcal} kcal / 100g`;
+  selectedBar.style.display='flex';
+  qtyInput.focus(); qtyInput.select();
+}
+function clearSelection(){
+  selectedFood = null;
+  selectedBar.style.display='none';
+}
+document.getElementById('cancelSelectBtn').addEventListener('click', ()=>{
+  clearSelection(); foodSearch.value=''; foodSearch.focus();
+});
+document.getElementById('confirmAddBtn').addEventListener('click', confirmAdd);
+qtyInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && selectedFood){ e.preventDefault(); confirmAdd(); }
+});
+
+/* confirma e efetivamente lança o alimento selecionado no dia, com a quantidade ajustada */
+function confirmAdd(){
+  if(!selectedFood) return;
+  addFoodEntry(selectedFood);
+  clearSelection();
+}
+function addFoodEntry(f){
+  if(!f) return;
+  const grams = parseFloat(qtyInput.value) || 100;
+  const key = todayStr(currentDate);
+  if(!state.logs[key]) state.logs[key] = [];
+  const factor = grams/100;
+  const mealVal = mealSelect.value === '__SEM__' ? '' : mealSelect.value;
+  state.logs[key].push({
+    foodId: f.id, name: f.n, grams, meal: mealVal,
+    kcal: +(f.kcal*factor).toFixed(1),
+    p: +(f.p*factor).toFixed(1),
+    c: +(f.c*factor).toFixed(1),
+    f: +(f.f*factor).toFixed(1),
+    fb: +((f.fb||0)*factor).toFixed(1),
+    na: +((f.na||0)*factor).toFixed(1),
+  });
+  saveState();
+  foodSearch.value=''; qtyInput.value=100; suggBox.style.display='none';
+  foodSearch.focus();
+  renderLog();
+}
+
+/* ============ meta ============ */
+function getGoal(){
+  return state.settings.goalKcal || 2000;
+}
+
+/* ============ render do log diário (agrupado por refeição) ============ */
+const mealsContainer = document.getElementById('mealsContainer');
+const logEmpty = document.getElementById('logEmpty');
+function renderLog(){
+  populateMealSelect();
+  const key = todayStr(currentDate);
+  const items = state.logs[key] || [];
+  if(items.length===0){
+    mealsContainer.innerHTML=''; logEmpty.style.display='block';
+  } else {
+    logEmpty.style.display='none';
+    // agrupa mantendo a ordem: primeiro pelas refeições configuradas (na ordem definida),
+    // depois qualquer refeição "órfã" (removida da config mas ainda usada no dia), depois sem refeição
+    const configMeals = state.settings.meals || [];
+    const usedMeals = [...new Set(items.map(it=>it.meal||''))];
+    const orderedMeals = [
+      ...configMeals.filter(m=>usedMeals.includes(m)),
+      ...usedMeals.filter(m=>m && !configMeals.includes(m)),
+    ];
+    const hasSemRefeicao = usedMeals.includes('');
+    const groups = orderedMeals.map(m=>({ name:m, items: items.map((it,i)=>({...it,_i:i})).filter(it=>it.meal===m) }));
+    if(hasSemRefeicao) groups.push({ name:'Sem refeição', items: items.map((it,i)=>({...it,_i:i})).filter(it=>!it.meal) });
+
+    mealsContainer.innerHTML = groups.map(g=>{
+      const sub = g.items.reduce((a,it)=>a+it.kcal,0);
+      return `<div class="meal-block">
+        <div class="meal-head"><span class="mh-name">${g.name}</span><span class="mh-sub">${Math.round(sub)} kcal</span></div>
+        <table class="log">
+          <thead><tr><th>Alimento</th><th class="num">Qtd (g)</th><th class="num">Kcal</th><th class="num">P</th><th class="num">C</th><th class="num">G</th><th></th></tr></thead>
+          <tbody>
+            ${g.items.map(it=>`
+              <tr>
+                <td>${it.name}</td>
+                <td class="num">${it.grams}</td>
+                <td class="num">${it.kcal}</td>
+                <td class="num">${it.p}</td>
+                <td class="num">${it.c}</td>
+                <td class="num">${it.f}</td>
+                <td><button class="rm-btn" data-i="${it._i}" title="Remover">✕</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }).join('');
+    mealsContainer.querySelectorAll('.rm-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        items.splice(parseInt(b.dataset.i),1);
+        saveState(); renderLog();
+      });
+    });
+  }
+  const totals = items.reduce((acc,it)=>({
+    kcal:acc.kcal+it.kcal, p:acc.p+it.p, c:acc.c+it.c, f:acc.f+it.f, fb:acc.fb+(it.fb||0), na:acc.na+(it.na||0)
+  }), {kcal:0,p:0,c:0,f:0,fb:0,na:0});
+  const goal = getGoal();
+  document.getElementById('kcalTotal').textContent = Math.round(totals.kcal);
+  document.getElementById('kcalGoalShown').textContent = goal;
+  document.getElementById('pTotal').textContent = totals.p.toFixed(1);
+  document.getElementById('cTotal').textContent = totals.c.toFixed(1);
+  document.getElementById('fTotal').textContent = totals.f.toFixed(1);
+  document.getElementById('fbTotal').textContent = totals.fb.toFixed(1);
+  document.getElementById('naTotal').textContent = Math.round(totals.na);
+  // %VD baseado na meta calórica: assume 30% kcal de proteina/gordura como referência simples e 50% carbo
+  document.getElementById('pVd').textContent = Math.round((totals.p*4/goal)*100)+'%';
+  document.getElementById('cVd').textContent = Math.round((totals.c*4/goal)*100)+'%';
+  document.getElementById('fVd').textContent = Math.round((totals.f*9/goal)*100)+'%';
+
+  const diff = totals.kcal - goal;
+  const pill = document.getElementById('statusPill'); const txt = document.getElementById('statusText');
+  pill.className = 'status-pill';
+  if(diff <= -50){ pill.classList.add('ok'); txt.textContent = `Déficit de ${Math.round(-diff)} kcal`; }
+  else if(diff > 50){ pill.classList.add('over'); txt.textContent = `Superávit de ${Math.round(diff)} kcal`; }
+  else { pill.classList.add('warn'); txt.textContent = 'Praticamente na meta'; }
+
+  document.getElementById('quickGoal').value = goal;
+}
+document.getElementById('quickGoalSave').addEventListener('click', ()=>{
+  const v = parseFloat(document.getElementById('quickGoal').value);
+  if(!v || v<=0) return;
+  state.settings.goalKcal = v; saveState();
+  syncConfigForm(); renderLog();
+});
+
+/* ============ relatório semanal ============ */
+function renderWeek(){
+  const goal = getGoal();
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = todayStr(d);
+    const items = state.logs[key] || [];
+    const kcal = items.reduce((a,it)=>a+it.kcal,0);
+    days.push({ date:d, key, kcal, logged: items.length>0 });
+  }
+  const loggedDays = days.filter(d=>d.logged);
+  const totalBalance = loggedDays.reduce((a,d)=>a + (goal - d.kcal), 0);
+  const avg = loggedDays.length ? loggedDays.reduce((a,d)=>a+d.kcal,0)/loggedDays.length : 0;
+  const under = loggedDays.filter(d=>d.kcal < goal).length;
+  const over = loggedDays.filter(d=>d.kcal >= goal).length;
+
+  const balEl = document.getElementById('wkBalance');
+  balEl.textContent = (totalBalance>=0?'-':'+') + Math.abs(Math.round(totalBalance));
+  balEl.className = 'val ' + (totalBalance>=0 ? 'pos':'neg');
+  document.getElementById('wkAvg').textContent = Math.round(avg);
+  document.getElementById('wkUnder').textContent = under;
+  document.getElementById('wkOver').textContent = over;
+  document.getElementById('wkLoggedDays').textContent = loggedDays.length;
+
+  const maxVal = Math.max(goal, ...days.map(d=>d.kcal), 1) * 1.15;
+  const barsWrap = document.getElementById('barsWrap');
+  barsWrap.innerHTML = days.map(d=>{
+    const h = d.logged ? Math.max((d.kcal/maxVal)*100, 2) : 0;
+    const goalH = (goal/maxVal)*100;
+    const cls = d.kcal > goal ? 'over' : 'under';
+    const wd = d.date.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
+    return `<div class="bar-col">
+      <div class="bar-track">
+        <div class="bar-goal-line" style="bottom:${goalH}%"></div>
+        ${d.logged ? `<div class="bar-fill ${cls}" style="height:${h}%" title="${Math.round(d.kcal)} kcal"></div>` : ''}
+      </div>
+      <div class="day-lbl">${wd}</div>
+      <div class="day-val">${d.logged? Math.round(d.kcal): '—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('wkTableBody').innerHTML = days.map(d=>{
+    const saldo = goal - d.kcal;
+    const saldoCls = d.logged ? (saldo>=0?'pos':'neg') : '';
+    return `<tr>
+      <td>${d.date.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'2-digit'})}</td>
+      <td>${d.logged? Math.round(d.kcal): '—'}</td>
+      <td>${goal}</td>
+      <td class="${saldoCls}">${d.logged ? (saldo>=0?'-':'+')+Math.abs(Math.round(saldo)) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============ configurações ============ */
+function syncConfigForm(){
+  document.getElementById('manualGoalInput').value = state.settings.goalKcal || 2000;
+  renderMealChips();
+  renderCustomFoodChips();
+}
+document.getElementById('saveGoalBtn').addEventListener('click', ()=>{
+  state.settings.goalKcal = parseFloat(document.getElementById('manualGoalInput').value) || 2000;
+  saveState(); renderLog();
+  alert('Meta salva: ' + getGoal() + ' kcal/dia');
+});
+
+/* ---- gestão de refeições ---- */
+function renderMealChips(){
+  const box = document.getElementById('mealChips');
+  const meals = state.settings.meals || [];
+  if(meals.length===0){
+    box.innerHTML = `<span style="color:var(--ink-soft);font-size:12.5px;">Nenhuma refeição cadastrada — tudo será lançado em "Sem refeição".</span>`;
+    return;
+  }
+  box.innerHTML = meals.map((m,i)=>`
+    <span class="meal-chip">${m}<button data-i="${i}" title="Remover">✕</button></span>`).join('');
+  box.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.settings.meals.splice(parseInt(b.dataset.i),1);
+      saveState(); renderMealChips(); populateMealSelect(); renderLog();
+    });
+  });
+}
+document.getElementById('addMealBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newMealInput');
+  const name = input.value.trim();
+  if(!name) return;
+  if(!state.settings.meals) state.settings.meals = [];
+  if(!state.settings.meals.includes(name)) state.settings.meals.push(name);
+  input.value=''; saveState(); renderMealChips(); populateMealSelect(); renderLog();
+});
+document.getElementById('newMealInput').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); document.getElementById('addMealBtn').click(); }
+});
+
+/* ============ calculadora TMB / GET ============ */
+const objCardsBox = document.getElementById('objetivoCards');
+function syncCalcForm(){
+  const c = state.settings.calc;
+  document.getElementById('calcSex').value = c.sex || 'f';
+  document.getElementById('calcAge').value = c.age || 30;
+  document.getElementById('calcWeight').value = c.weight || 65;
+  document.getElementById('calcHeight').value = c.height || 165;
+  document.getElementById('calcActivity').value = c.activity || 1.375;
+  highlightObjCard(c.objetivo != null ? c.objetivo : 0);
+  updateCalcResult(); // apenas exibe o preview ao abrir a aba, não grava nada sozinho
+}
+function highlightObjCard(val){
+  objCardsBox.querySelectorAll('.obj-card').forEach(el=>{
+    el.classList.toggle('sel', parseFloat(el.dataset.val)===parseFloat(val));
+  });
+}
+objCardsBox.querySelectorAll('.obj-card').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    state.settings.calc.objetivo = parseFloat(el.dataset.val);
+    highlightObjCard(state.settings.calc.objetivo);
+    saveCalcInputs();
+    applyCalcGoal(); // objetivo é uma escolha explícita -> linka na hora
+  });
+});
+function saveCalcInputs(){
+  const c = state.settings.calc;
+  c.sex = document.getElementById('calcSex').value;
+  c.age = parseFloat(document.getElementById('calcAge').value) || 0;
+  c.weight = parseFloat(document.getElementById('calcWeight').value) || 0;
+  c.height = parseFloat(document.getElementById('calcHeight').value) || 0;
+  c.activity = parseFloat(document.getElementById('calcActivity').value) || 1.2;
+  saveState();
+}
+['calcSex','calcAge','calcWeight','calcHeight','calcActivity'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ saveCalcInputs(); applyCalcGoal(); });
+});
+function computeTmbGet(){
+  const c = state.settings.calc;
+  if(!c.weight || !c.height || !c.age) return null;
+  const bmr = c.sex==='m'
+    ? 10*c.weight + 6.25*c.height - 5*c.age + 5
+    : 10*c.weight + 6.25*c.height - 5*c.age - 161;
+  const get = bmr * (c.activity||1.375);
+  const meta = Math.round(get + (c.objetivo||0));
+  return { bmr: Math.round(bmr), get: Math.round(get), meta };
+}
+function updateCalcResult(){
+  const r = computeTmbGet();
+  const note = document.getElementById('calcAppliedNote');
+  if(!r){
+    document.getElementById('resTMB').textContent='—';
+    document.getElementById('resGET').textContent='—';
+    document.getElementById('resMeta').textContent='—';
+    note.textContent = 'Preencha peso, altura e idade para calcular.';
+    note.classList.remove('live');
+    return r;
+  }
+  document.getElementById('resTMB').textContent = r.bmr + ' kcal';
+  document.getElementById('resGET').textContent = r.get + ' kcal';
+  document.getElementById('resMeta').textContent = r.meta + ' kcal';
+  return r;
+}
+// chamada a cada alteração de campo/objetivo: recalcula, mostra o resultado e
+// já grava como a meta diária ativa — é isso que "linka direto" com Hoje/Semana/Config
+function applyCalcGoal(){
+  const r = updateCalcResult();
+  const note = document.getElementById('calcAppliedNote');
+  if(!r){ return; }
+  state.settings.goalKcal = r.meta;
+  saveState();
+  note.textContent = `✓ Meta diária atualizada para ${r.meta} kcal — aplicada automaticamente.`;
+  note.classList.add('live');
+  refreshGoalDependentUI();
+}
+// mantém Hoje e Config sincronizados sempre que a meta muda, sem precisar trocar de aba
+function refreshGoalDependentUI(){
+  renderLog();
+  const manualInput = document.getElementById('manualGoalInput');
+  if(manualInput) manualInput.value = getGoal();
+}
+
+
+/* ============ export / import / limpar ============ */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = `balanco-calorico-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data.logs || !data.settings) throw new Error('formato inválido');
+      state = data;
+      if(!state.customFoods) state.customFoods=[];
+      if(!state.settings.meals) state.settings.meals = DEFAULT_MEALS.slice();
+      if(!state.settings.calc) state.settings.calc = defaultState().settings.calc;
+      saveState(); applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
+      alert('Dados importados com sucesso.');
+    }catch(err){ alert('Arquivo inválido: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(confirm('Isso vai apagar TODOS os registros e configurações salvos neste navegador. Continuar?')){
+    localStorage.removeItem(STORE_KEY);
+    state = loadState();
+    applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
+  }
+});
+
+/* ============ init ============ */
+refreshDateHeader();
+syncConfigForm();
+renderLog();
+</script>
+</body>
+</html>
