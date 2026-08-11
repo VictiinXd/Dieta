@@ -518,6 +518,11 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 
   <!-- ===================== SEMANA ===================== -->
   <section class="view" id="view-semana">
+    <div class="datebar" style="margin-bottom:18px;">
+      <button id="weekPrev">‹</button>
+      <div class="cur"><span id="weekLabel">Semana atual</span><small id="weekDate">--</small></div>
+      <button id="weekNext">›</button>
+    </div>
     <div class="week-summary">
       <div class="stat-card"><div class="lbl">Saldo da semana</div><div class="val" id="wkBalance">0</div><div class="sub">kcal acumuladas vs. meta</div></div>
       <div class="stat-card"><div class="lbl">Média diária</div><div class="val" id="wkAvg">0</div><div class="sub">kcal / dia registrado</div></div>
@@ -526,7 +531,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
     </div>
 
     <div class="panel chart-wrap">
-      <h2>Consumo vs. meta — semana atual (seg a sex)</h2>
+      <h2>Consumo vs. meta (seg a sex)</h2>
       <div class="bars" id="barsWrap"></div>
     </div>
 
@@ -1350,17 +1355,27 @@ document.getElementById('quickGoalSave').addEventListener('click', ()=>{
 });
 
 /* ============ relatório semanal ============ */
-function getCurrentWeekdayRange(){
+let weekOffset = 0; // 0 = semana atual, -1 = anterior, +1 = seguinte...
+function getCurrentWeekdayRange(offset){
   const today = new Date();
   const dow = today.getDay(); // 0=domingo,1=segunda,...,6=sábado
   const diffToMonday = dow===0 ? -6 : 1-dow;
-  const monday = new Date(today); monday.setDate(today.getDate()+diffToMonday);
+  const monday = new Date(today); monday.setDate(today.getDate()+diffToMonday+(offset||0)*7);
   monday.setHours(0,0,0,0);
   return monday;
 }
+function refreshWeekHeader(monday, friday){
+  const label = document.getElementById('weekLabel');
+  const sub = document.getElementById('weekDate');
+  label.textContent = weekOffset===0 ? 'Semana atual' : (weekOffset<0 ? `${Math.abs(weekOffset)} semana(s) atrás` : `${weekOffset} semana(s) à frente`);
+  const f = d=> d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  sub.textContent = `${f(monday)} a ${f(friday)}`;
+}
+document.getElementById('weekPrev').addEventListener('click', ()=>{ weekOffset--; renderWeek(); });
+document.getElementById('weekNext').addEventListener('click', ()=>{ weekOffset++; renderWeek(); });
 function renderWeek(){
   const goal = getGoal();
-  const monday = getCurrentWeekdayRange();
+  const monday = getCurrentWeekdayRange(weekOffset);
   const days = [];
   for(let i=0;i<5;i++){ // segunda a sexta
     const d = new Date(monday); d.setDate(monday.getDate()+i);
@@ -1369,6 +1384,7 @@ function renderWeek(){
     const kcal = items.reduce((a,it)=>a+it.kcal,0);
     days.push({ date:d, key, kcal, logged: items.length>0 });
   }
+  refreshWeekHeader(days[0].date, days[4].date);
   const loggedDays = days.filter(d=>d.logged);
   const totalBalance = loggedDays.reduce((a,d)=>a + (goal - d.kcal), 0);
   const avg = loggedDays.length ? loggedDays.reduce((a,d)=>a+d.kcal,0)/loggedDays.length : 0;
