@@ -173,20 +173,29 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 .selected-bar .sb-kcal{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
 .selected-bar .iconbtn{width:26px;height:26px;font-size:14px;border:none;background:transparent;}
 
-/* food log table */
-table.log{width:100%;border-collapse:collapse;font-size:13.5px;}
-table.log th{
-  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--ink-soft);padding:0 6px 8px;border-bottom:2px solid var(--line-strong);font-weight:700;
+/* food log — lista compacta (não mais tabela de 6 colunas apertadas) */
+.log-list{display:flex;flex-direction:column;}
+.log-item{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;flex-wrap:wrap;
 }
-table.log td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
-table.log td.num{font-family:'IBM Plex Mono';text-align:right;white-space:nowrap;}
-table.log tr:last-child td{border-bottom:none;}
-table.log tr.log-row{cursor:pointer;}
-table.log tr.log-row:hover td{background:var(--bg-soft);}
-.rm-btn{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;}
+.log-item:last-child{border-bottom:none;}
+.log-item:hover{background:var(--bg-soft);}
+.li-main{flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.li-name{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.li-qty{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
+.li-macros{display:flex;align-items:baseline;gap:12px;flex-shrink:0;font-family:'IBM Plex Mono';}
+.li-kcal{font-weight:800;font-size:13.5px;min-width:62px;text-align:right;}
+.li-macro{color:var(--ink-soft);font-size:11.5px;white-space:nowrap;}
+.li-macro b{color:var(--ink);font-weight:700;font-size:12.5px;}
+.rm-btn{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;flex-shrink:0;}
 .rm-btn:hover{color:var(--danger);}
 .empty-state{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+@media (max-width:480px){
+  .log-item{gap:6px 14px;}
+  .li-macros{width:100%;justify-content:flex-start;order:3;}
+}
 
 /* nutrition label card - signature element */
 .label-card{
@@ -1282,21 +1291,22 @@ function renderLog(){
             <button class="pin-btn${isPinned?' pinned':''}" data-meal="${g.name}" title="${isPinned?'Atualizar refeição fixa':'Fixar esta refeição'}">📌</button>
           </span>
         </div>
-        <table class="log">
-          <thead><tr><th>Alimento</th><th class="num">Qtd (g)</th><th class="num">Kcal</th><th class="num">P</th><th class="num">C</th><th class="num">G</th><th></th></tr></thead>
-          <tbody>
-            ${g.items.map(it=>`
-              <tr class="log-row" data-i="${it._i}" title="Clique para editar">
-                <td>${it.name}</td>
-                <td class="num">${it.grams}</td>
-                <td class="num">${it.kcal}</td>
-                <td class="num">${it.p}</td>
-                <td class="num">${it.c}</td>
-                <td class="num">${it.f}</td>
-                <td><button class="rm-btn" data-i="${it._i}" title="Remover">✕</button></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+        <div class="log-list">
+          ${g.items.map(it=>`
+            <div class="log-item" data-i="${it._i}" title="Clique para editar">
+              <div class="li-main">
+                <span class="li-name">${it.name}</span>
+                <span class="li-qty">${it.grams} g</span>
+              </div>
+              <div class="li-macros">
+                <span class="li-kcal">${it.kcal} kcal</span>
+                <span class="li-macro"><b>${it.p}</b>P</span>
+                <span class="li-macro"><b>${it.c}</b>C</span>
+                <span class="li-macro"><b>${it.f}</b>G</span>
+              </div>
+              <button class="rm-btn" data-i="${it._i}" title="Remover">✕</button>
+            </div>`).join('')}
+        </div>
       </div>`;
     }).join('');
     mealsContainer.querySelectorAll('.pin-btn').forEach(b=>{
@@ -1311,8 +1321,8 @@ function renderLog(){
         removeItemWithUndo(key, parseInt(b.dataset.i));
       });
     });
-    mealsContainer.querySelectorAll('.log-row').forEach(tr=>{
-      tr.addEventListener('click', ()=> startEditItem(key, parseInt(tr.dataset.i)));
+    mealsContainer.querySelectorAll('.log-item').forEach(row=>{
+      row.addEventListener('click', ()=> startEditItem(key, parseInt(row.dataset.i)));
     });
   }
   const totals = items.reduce((acc,it)=>({
