@@ -151,6 +151,19 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 .suggestions .empty{padding:14px;color:var(--ink-soft);font-size:13px;}
 .suggestions .addcustom{padding:10px 13px;color:var(--accent);font-weight:600;cursor:pointer;font-size:13px;}
 
+.recent-foods{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px;}
+.recent-foods .rf-lbl{
+  font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
+  font-family:'IBM Plex Mono';flex-basis:100%;margin-bottom:1px;
+}
+.recent-chip{
+  border:1px solid var(--line);background:var(--bg-soft);border-radius:999px;
+  padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;
+  max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  line-height:1.3;
+}
+.recent-chip:hover{border-color:var(--accent);color:var(--accent);}
+
 .selected-bar{
   display:flex;align-items:center;gap:10px;margin-top:8px;padding:9px 10px 9px 14px;
   background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:2px;
@@ -169,6 +182,8 @@ table.log th{
 table.log td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
 table.log td.num{font-family:'IBM Plex Mono';text-align:right;white-space:nowrap;}
 table.log tr:last-child td{border-bottom:none;}
+table.log tr.log-row{cursor:pointer;}
+table.log tr.log-row:hover td{background:var(--bg-soft);}
 .rm-btn{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;}
 .rm-btn:hover{color:var(--danger);}
 .empty-state{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
@@ -191,11 +206,19 @@ table.log tr:last-child td{border-bottom:none;}
 .kcal-row .k-val small{font-family:'Inter';font-size:14px;font-weight:600;color:var(--ink-soft);}
 .vd-head{display:flex;justify-content:flex-end;font-size:10px;color:var(--ink-soft);
   text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono';padding:2px 0;}
-.nutrow{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line);}
+.nutrow{padding:7px 0;border-bottom:1px solid var(--line);}
 .nutrow:last-child{border-bottom:none;}
-.nutrow .nm{font-weight:600;}
-.nutrow .vv{font-family:'IBM Plex Mono';display:flex;gap:14px;}
-.nutrow .vv .vd{color:var(--ink-soft);min-width:42px;text-align:right;}
+.nutrow-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;gap:10px;}
+.nutrow .nm{font-weight:600;flex-shrink:0;}
+.nutrow .vv{font-family:'IBM Plex Mono';display:flex;align-items:baseline;gap:12px;}
+.nutrow .vv-amount{white-space:nowrap;}
+.nutrow .vv-amount b{font-weight:700;}
+.nutrow .vv-of{color:var(--ink-soft);margin:0 2px;font-weight:400;}
+.nutrow .vv-unit{color:var(--ink-soft);margin-left:2px;font-size:12px;}
+.nutrow .vd{color:var(--ink-soft);min-width:36px;text-align:right;font-weight:700;}
+.nutrow-bar{height:4px;border-radius:2px;background:var(--bg-soft);overflow:hidden;margin-top:5px;}
+.nutrow-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease;}
+.nutrow-bar-fill.over{background:var(--danger);}
 .status-pill{
   display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
   font-size:12px;font-weight:700;margin-top:12px;
@@ -272,8 +295,32 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
   display:flex;justify-content:space-between;align-items:baseline;
   border-bottom:2px solid var(--line-strong);padding-bottom:6px;margin-bottom:2px;
 }
-.meal-head .mh-name{font-weight:800;font-size:14px;}
-.meal-head .mh-sub{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-soft);}
+.meal-head .mh-name{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;}
+.meal-head .mh-sub{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;}
+.pin-btn{
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:13px;
+  padding:2px 4px;line-height:1;opacity:.55;transition:.15s;
+}
+.pin-btn:hover{opacity:1;color:var(--amber);}
+.pin-btn.pinned{opacity:1;color:var(--amber);}
+
+.quick-actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.fixed-meals{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:14px;}
+.fixed-meals .fm-lbl{
+  font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
+  font-family:'IBM Plex Mono';flex-basis:100%;margin-bottom:1px;
+}
+.fixed-meal-chip{
+  display:flex;align-items:center;gap:6px;background:var(--amber-soft);border:1px solid var(--amber);
+  border-radius:999px;padding:5px 6px 5px 13px;font-size:12px;font-weight:600;color:var(--amber);
+}
+.fixed-meal-chip button.apply{border:none;background:transparent;color:var(--amber);cursor:pointer;font-weight:700;
+  padding:2px 4px;font-size:12px;text-decoration:underline;}
+.fixed-meal-chip button.unpin{
+  border:none;background:transparent;color:var(--amber);cursor:pointer;
+  width:18px;height:18px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;opacity:.7;
+}
+.fixed-meal-chip button.unpin:hover{opacity:1;background:rgba(0,0,0,.08);}
 .meals-empty{padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
 
 /* meal chips - config */
@@ -355,6 +402,16 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 .print-day-title{font-weight:800;font-size:13.5px;border-bottom:2px solid #111;padding-bottom:4px;margin-bottom:6px;text-transform:capitalize;}
 .print-meal-name{font-weight:700;font-size:12px;color:#333;margin:8px 0 3px;}
 .print-footer{font-size:10.5px;color:#666;font-family:'IBM Plex Mono';margin-top:16px;border-top:1px solid #ccc;padding-top:8px;}
+
+/* toast de desfazer */
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:4px;
+  display:flex;align-items:center;gap:16px;font-size:13.5px;z-index:300;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;
+}
+[data-theme="dark"] .toast{background:#EDEFEA;color:#14181A;}
+.toast .link-btn{font-weight:800;text-decoration:none;white-space:nowrap;}
 </style>
 </head>
 <body data-theme="light">
@@ -384,7 +441,12 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
             <div class="cur"><span id="dayLabel">Hoje</span><small id="dayDate">--</small></div>
             <button id="dayNext">›</button>
           </div>
+          <div class="quick-actions-row">
+            <button class="btn ghost small" id="repeatYesterdayBtn" type="button">↺ Repetir alimentos de ontem</button>
+          </div>
+          <div class="fixed-meals" id="fixedMealsBar" style="display:none;"></div>
           <div class="search-box">
+            <div class="recent-foods" id="recentFoods" style="display:none;"></div>
             <div class="search-row">
               <input type="text" id="foodSearch" placeholder="Buscar por palavra-chave (ex: frango grelhado, arroz, feijão)…" autocomplete="off">
               <input type="number" id="qtyInput" class="qty-input" value="100" min="1" step="1">
@@ -392,6 +454,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
             </div>
             <div class="selected-bar" id="selectedBar" style="display:none;">
               <span class="sb-info"><span class="sb-name" id="selectedFoodName"></span><span class="sb-kcal" id="selectedFoodKcal"></span></span>
+              <select class="meal-select" id="qtyUnitSelect" style="display:none;max-width:120px;"></select>
               <button class="btn accent small" id="confirmAddBtn">Adicionar</button>
               <button class="iconbtn" id="cancelSelectBtn" title="Cancelar">×</button>
             </div>
@@ -413,12 +476,34 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
             <span class="k-val"><span id="kcalTotal">0</span> <small>/ <span id="kcalGoalShown">2000</span> kcal</small></span>
           </div>
           <hr class="rule-mid">
-          <div class="vd-head">consumido/meta (g) · % da meta</div>
-          <div class="nutrow"><span class="nm">Proteína</span><span class="vv"><span id="pTotal">0</span>/<span id="pGoalG">0</span> g<span class="vd" id="pVd">0%</span></span></div>
-          <div class="nutrow"><span class="nm">Carboidrato</span><span class="vv"><span id="cTotal">0</span>/<span id="cGoalG">0</span> g<span class="vd" id="cVd">0%</span></span></div>
-          <div class="nutrow"><span class="nm">Gordura</span><span class="vv"><span id="fTotal">0</span>/<span id="fGoalG">0</span> g<span class="vd" id="fVd">0%</span></span></div>
-          <div class="nutrow"><span class="nm">Fibra</span><span class="vv"><span id="fbTotal">0</span> g<span class="vd"></span></span></div>
-          <div class="nutrow"><span class="nm">Sódio</span><span class="vv"><span id="naTotal">0</span> mg<span class="vd"></span></span></div>
+          <div class="vd-head">consumido / meta (g) · % da meta</div>
+          <div class="nutrow">
+            <div class="nutrow-top">
+              <span class="nm">Proteína</span>
+              <span class="vv"><span class="vv-amount"><b id="pTotal">0</b><span class="vv-of">/</span><b id="pGoalG">0</b><span class="vv-unit">g</span></span><span class="vd" id="pVd">0%</span></span>
+            </div>
+            <div class="nutrow-bar"><div class="nutrow-bar-fill" id="pBar" style="width:0%"></div></div>
+          </div>
+          <div class="nutrow">
+            <div class="nutrow-top">
+              <span class="nm">Carboidrato</span>
+              <span class="vv"><span class="vv-amount"><b id="cTotal">0</b><span class="vv-of">/</span><b id="cGoalG">0</b><span class="vv-unit">g</span></span><span class="vd" id="cVd">0%</span></span>
+            </div>
+            <div class="nutrow-bar"><div class="nutrow-bar-fill" id="cBar" style="width:0%"></div></div>
+          </div>
+          <div class="nutrow">
+            <div class="nutrow-top">
+              <span class="nm">Gordura</span>
+              <span class="vv"><span class="vv-amount"><b id="fTotal">0</b><span class="vv-of">/</span><b id="fGoalG">0</b><span class="vv-unit">g</span></span><span class="vd" id="fVd">0%</span></span>
+            </div>
+            <div class="nutrow-bar"><div class="nutrow-bar-fill" id="fBar" style="width:0%"></div></div>
+          </div>
+          <div class="nutrow">
+            <div class="nutrow-top"><span class="nm">Fibra</span><span class="vv"><span class="vv-amount"><b id="fbTotal">0</b><span class="vv-unit">g</span></span></span></div>
+          </div>
+          <div class="nutrow">
+            <div class="nutrow-top"><span class="nm">Sódio</span><span class="vv"><span class="vv-amount"><b id="naTotal">0</b><span class="vv-unit">mg</span></span></span></div>
+          </div>
           <hr class="rule">
           <div id="statusPill" class="status-pill ok"><span class="dot"></span><span id="statusText">Dentro da meta</span></div>
           <div class="meta-edit-row">
@@ -441,7 +526,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
     </div>
 
     <div class="panel chart-wrap">
-      <h2>Consumo vs. meta — últimos 7 dias</h2>
+      <h2>Consumo vs. meta — semana atual (seg a sex)</h2>
       <div class="bars" id="barsWrap"></div>
     </div>
 
@@ -537,7 +622,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <h2>Aparência</h2>
         <div class="field">
           <label>Tema</label>
-          <select id="themeSelect"><option value="light">Claro</option><option value="dark">Escuro</option></select>
+          <select id="themeSelect"><option value="light">Claro</option><option value="dark">Escuro</option><option value="auto">Automático (sistema)</option></select>
         </div>
 
         <div class="divider-lbl">Dados</div>
@@ -593,6 +678,27 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
   <!-- área usada apenas na impressão/PDF, invisível na tela -->
   <div class="print-area" id="printArea"></div>
 
+  <div class="toast" id="undoToast" style="display:none;">
+    <span id="undoToastText"></span>
+    <button class="link-btn" id="undoToastBtn" type="button" style="color:#fff;">Desfazer</button>
+  </div>
+
+  <!-- ===================== MODAL: REPETIR ALIMENTOS DE ONTEM ===================== -->
+  <div class="modal-overlay" id="repeatModalOverlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Repetir alimentos</h3>
+        <button class="iconbtn" id="closeRepeatModal" type="button">×</button>
+      </div>
+      <p class="help" id="repeatModalSub"></p>
+      <div id="repeatMealsList"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelRepeatModal" type="button">Cancelar</button>
+        <button class="btn accent" id="confirmRepeatModal" type="button">Importar selecionados</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== MODAL: NOVO ALIMENTO PERSONALIZADO ===================== -->
   <div class="modal-overlay" id="foodModalOverlay" style="display:none;">
     <div class="modal-card">
@@ -615,6 +721,14 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <div class="field"><label>Sódio (mg/100g, opcional)</label><input type="number" id="nfNa" step="1" placeholder="0"></div>
       </div>
       <div class="help">Os valores devem ser por 100 g do alimento — o app faz a conversão pela quantidade que você lançar no dia.</div>
+
+      <div class="divider-lbl">Medida caseira (opcional)</div>
+      <p class="help">Permite lançar esse alimento por unidade (ex: "2 fatias") em vez de só em gramas.</p>
+      <div class="field-row">
+        <div class="field"><label>Nome da medida</label><input type="text" id="nfMeasureName" placeholder="ex: fatia, xícara, colher de sopa"></div>
+        <div class="field"><label>Peso de 1 medida (g)</label><input type="number" id="nfMeasureGrams" step="0.1" placeholder="ex: 30"></div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn ghost" id="cancelFoodModal" type="button">Cancelar</button>
         <button class="btn accent" id="saveFoodModal" type="button">Salvar e selecionar</button>
@@ -640,9 +754,9 @@ const DEFAULT_MEALS = ['Café da manhã','Almoço','Lanche da tarde','Jantar'];
 const DEFAULT_MACROS = { p:30, c:40, f:30 }; // % das calorias da meta
 function defaultState(){
   return {
-    settings:{ goalKcal:2000, theme:'light', meals: DEFAULT_MEALS.slice(), macros: {...DEFAULT_MACROS},
+    settings:{ goalKcal:2000, theme:'auto', meals: DEFAULT_MEALS.slice(), macros: {...DEFAULT_MACROS},
       calc:{ sex:'f', age:30, weight:65, height:165, activity:1.375, objetivo:0 } },
-    logs:{}, customFoods:[]
+    logs:{}, customFoods:[], recentFoods:[], fixedMeals:{}
   };
 }
 function loadState(){
@@ -654,6 +768,8 @@ function loadState(){
   // migração: garantir todos os campos esperados existam
   if(!s.settings) s.settings = defaultState().settings;
   if(!s.customFoods) s.customFoods = [];
+  if(!s.recentFoods) s.recentFoods = [];
+  if(!s.fixedMeals) s.fixedMeals = {};
   if(!s.logs) s.logs = {};
   if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
   if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
@@ -704,13 +820,19 @@ tabBtns.forEach(btn=>{
 /* ============ tema ============ */
 const themeToggle = document.getElementById('themeToggle');
 const themeSelect = document.getElementById('themeSelect');
+const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+function computeAutoTheme(){ return systemThemeMedia.matches ? 'dark' : 'light'; }
 function applyTheme(t){
-  document.body.setAttribute('data-theme', t);
-  themeToggle.textContent = t==='dark' ? '☀️' : '🌙';
+  const actual = t==='auto' ? computeAutoTheme() : t;
+  document.body.setAttribute('data-theme', actual);
+  themeToggle.textContent = actual==='dark' ? '☀️' : '🌙';
   themeSelect.value = t;
   state.settings.theme = t; saveState();
 }
-applyTheme(state.settings.theme || 'light');
+applyTheme(state.settings.theme || 'auto');
+// se estiver no modo automático, acompanha mudança de tema do sistema em tempo real
+systemThemeMedia.addEventListener('change', ()=>{ if(state.settings.theme==='auto') applyTheme('auto'); });
+// o botão de atalho sempre define um tema explícito (sai do automático)
 themeToggle.addEventListener('click', ()=> applyTheme(document.body.getAttribute('data-theme')==='dark' ? 'light':'dark'));
 themeSelect.addEventListener('change', e=> applyTheme(e.target.value));
 
@@ -752,6 +874,7 @@ const selectedBar = document.getElementById('selectedBar');
 let highlightIdx = -1;
 let currentResults = [];
 let selectedFood = null;
+let editingContext = null;
 
 function tokenize(str){
   return normalize(str).replace(/[.,;()\/]/g,' ').split(/\s+/).filter(Boolean);
@@ -799,7 +922,7 @@ function renderSuggestions(query){
     el.addEventListener('click', ()=> selectFood(currentResults[parseInt(el.dataset.idx)]));
   });
 }
-foodSearch.addEventListener('input', (e)=>{ clearSelection(); renderSuggestions(e.target.value); });
+foodSearch.addEventListener('input', (e)=>{ clearSelection(); renderSuggestions(e.target.value); renderRecentFoods(); });
 foodSearch.addEventListener('keydown', (e)=>{
   const items = suggBox.querySelectorAll('.sug-item');
   if(e.key==='ArrowDown'){ e.preventDefault(); highlightIdx=Math.min(highlightIdx+1, items.length-1); updateHl(items); }
@@ -821,6 +944,8 @@ function openFoodModal(prefillName){
   document.getElementById('nfF').value = '';
   document.getElementById('nfFb').value = '';
   document.getElementById('nfNa').value = '';
+  document.getElementById('nfMeasureName').value = '';
+  document.getElementById('nfMeasureGrams').value = '';
   foodModalOverlay.style.display = 'flex';
   suggBox.style.display = 'none';
   const nameField = document.getElementById('nfName');
@@ -837,6 +962,8 @@ document.getElementById('saveFoodModal').addEventListener('click', ()=>{
   const kcal = parseFloat(document.getElementById('nfKcal').value);
   if(!name){ alert('Digite um nome para o alimento.'); document.getElementById('nfName').focus(); return; }
   if(isNaN(kcal)){ alert('Informe as calorias por 100g.'); document.getElementById('nfKcal').focus(); return; }
+  const measureName = document.getElementById('nfMeasureName').value.trim();
+  const measureGrams = parseFloat(document.getElementById('nfMeasureGrams').value);
   const newFood = {
     id: 'custom_'+Date.now(), n:name,
     kcal,
@@ -847,6 +974,10 @@ document.getElementById('saveFoodModal').addEventListener('click', ()=>{
     na: parseFloat(document.getElementById('nfNa').value) || 0,
     cat: document.getElementById('nfCat').value.trim() || 'Personalizado',
   };
+  if(measureName && !isNaN(measureGrams) && measureGrams>0){
+    newFood.measureName = measureName;
+    newFood.measureGrams = measureGrams;
+  }
   state.customFoods.push(newFood); saveState();
   closeFoodModal();
   foodSearch.value = '';
@@ -873,36 +1004,96 @@ function renderCustomFoodChips(){
 }
 
 /* seleciona o alimento (ainda não salva) e mostra a barra pra ajustar quantidade antes de confirmar */
+const qtyUnitSelect = document.getElementById('qtyUnitSelect');
 function selectFood(f){
   if(!f) return;
+  editingContext = null; // selecionar um alimento novo cancela qualquer edição em andamento
   selectedFood = f;
   suggBox.style.display='none';
   document.getElementById('selectedFoodName').textContent = f.n;
   document.getElementById('selectedFoodKcal').textContent = `${f.kcal} kcal / 100g`;
+  document.getElementById('confirmAddBtn').textContent = 'Adicionar';
+  setupQtyUnit(f);
   selectedBar.style.display='flex';
   qtyInput.focus(); qtyInput.select();
 }
+// mostra o seletor g / medida caseira apenas quando o alimento tem uma medida cadastrada
+function setupQtyUnit(f){
+  if(f && f.measureName && f.measureGrams){
+    qtyUnitSelect.innerHTML = `<option value="g">g</option><option value="measure">${f.measureName}</option>`;
+    qtyUnitSelect.value = 'g';
+    qtyUnitSelect.style.display = 'block';
+  } else {
+    qtyUnitSelect.innerHTML = '';
+    qtyUnitSelect.style.display = 'none';
+  }
+}
 function clearSelection(){
   selectedFood = null;
+  editingContext = null;
   selectedBar.style.display='none';
+  qtyUnitSelect.style.display='none';
+  document.getElementById('confirmAddBtn').textContent = 'Adicionar';
 }
 document.getElementById('cancelSelectBtn').addEventListener('click', ()=>{
   clearSelection(); foodSearch.value=''; foodSearch.focus();
 });
 document.getElementById('confirmAddBtn').addEventListener('click', confirmAdd);
 qtyInput.addEventListener('keydown', (e)=>{
-  if(e.key==='Enter' && selectedFood){ e.preventDefault(); confirmAdd(); }
+  if(e.key==='Enter' && (selectedFood || editingContext)){ e.preventDefault(); confirmAdd(); }
 });
 
-/* confirma e efetivamente lança o alimento selecionado no dia, com a quantidade ajustada */
+/* clique numa linha já lançada abre a mesma barra, agora em modo edição */
+function startEditItem(key, idx){
+  const item = state.logs[key] && state.logs[key][idx];
+  if(!item) return;
+  selectedFood = null;
+  editingContext = {
+    key, idx, name:item.name,
+    kcalPerG: item.kcal/item.grams, pPerG:item.p/item.grams, cPerG:item.c/item.grams,
+    fPerG:item.f/item.grams, fbPerG:(item.fb||0)/item.grams, naPerG:(item.na||0)/item.grams,
+  };
+  suggBox.style.display='none';
+  document.getElementById('selectedFoodName').textContent = 'Editando: ' + item.name;
+  document.getElementById('selectedFoodKcal').textContent = `${item.kcal} kcal atualmente`;
+  document.getElementById('confirmAddBtn').textContent = 'Salvar alterações';
+  qtyUnitSelect.style.display='none'; qtyUnitSelect.innerHTML='';
+  qtyInput.value = item.grams;
+  mealSelect.value = item.meal || '__SEM__';
+  selectedBar.style.display='flex';
+  qtyInput.focus(); qtyInput.select();
+}
+
+/* confirma: lança um alimento novo OU salva as alterações de um item já existente */
 function confirmAdd(){
+  if(editingContext){
+    const grams = parseFloat(qtyInput.value) || 1;
+    const c = editingContext;
+    const item = state.logs[c.key][c.idx];
+    if(!item) { clearSelection(); return; }
+    item.grams = grams;
+    item.meal = mealSelect.value === '__SEM__' ? '' : mealSelect.value;
+    item.kcal = +(c.kcalPerG*grams).toFixed(1);
+    item.p = +(c.pPerG*grams).toFixed(1);
+    item.c = +(c.cPerG*grams).toFixed(1);
+    item.f = +(c.fPerG*grams).toFixed(1);
+    item.fb = +(c.fbPerG*grams).toFixed(1);
+    item.na = +(c.naPerG*grams).toFixed(1);
+    saveState();
+    clearSelection(); qtyInput.value=100;
+    renderLog();
+    return;
+  }
   if(!selectedFood) return;
   addFoodEntry(selectedFood);
   clearSelection();
 }
 function addFoodEntry(f){
   if(!f) return;
-  const grams = parseFloat(qtyInput.value) || 100;
+  let grams = parseFloat(qtyInput.value) || 100;
+  if(qtyUnitSelect.style.display!=='none' && qtyUnitSelect.value==='measure' && f.measureGrams){
+    grams = grams * f.measureGrams;
+  }
   const key = todayStr(currentDate);
   if(!state.logs[key]) state.logs[key] = [];
   const factor = grams/100;
@@ -917,14 +1108,129 @@ function addFoodEntry(f){
     na: +((f.na||0)*factor).toFixed(1),
   });
   saveState();
+  pushRecentFood(f.id);
   foodSearch.value=''; qtyInput.value=100; suggBox.style.display='none';
   foodSearch.focus();
   renderLog();
 }
 
+/* ============ alimentos recentes ============ */
+function pushRecentFood(foodId){
+  if(!state.recentFoods) state.recentFoods = [];
+  state.recentFoods = state.recentFoods.filter(id=>id!==foodId);
+  state.recentFoods.unshift(foodId);
+  state.recentFoods = state.recentFoods.slice(0,12);
+  saveState();
+}
+function renderRecentFoods(){
+  const box = document.getElementById('recentFoods');
+  const ids = state.recentFoods || [];
+  if(ids.length===0 || foodSearch.value.trim()!==''){ box.style.display='none'; return; }
+  const foods = allFoods();
+  const list = ids.map(id=>foods.find(f=>f.id===id)).filter(Boolean).slice(0,8);
+  if(list.length===0){ box.style.display='none'; return; }
+  box.innerHTML = `<span class="rf-lbl">Recentes</span>` + list.map((f,i)=>
+    `<button type="button" class="recent-chip" data-idx="${i}" title="${f.n}">${f.n}</button>`).join('');
+  box.style.display='flex';
+  box.querySelectorAll('.recent-chip').forEach(b=>{
+    b.addEventListener('click', ()=> selectFood(list[parseInt(b.dataset.idx)]));
+  });
+}
+
+/* ============ repetir alimentos de ontem (com escolha de refeições) ============ */
+let repeatModalGroups = [];
+function openRepeatModal(){
+  const prev = new Date(currentDate); prev.setDate(prev.getDate()-1);
+  const prevKey = todayStr(prev);
+  const prevItems = state.logs[prevKey] || [];
+  if(prevItems.length===0){ alert('Nenhum alimento registrado no dia anterior.'); return; }
+  repeatModalGroups = groupItemsByMeal(prevItems);
+  document.getElementById('repeatModalSub').textContent =
+    `Escolha quais refeições de ${prev.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'2-digit'})} importar para hoje.`;
+  document.getElementById('repeatMealsList').innerHTML = repeatModalGroups.map((g,i)=>{
+    const kcal = Math.round(g.items.reduce((a,it)=>a+it.kcal,0));
+    return `<label style="display:flex;align-items:center;gap:10px;font-size:13.5px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
+      <input type="checkbox" class="repeat-meal-chk" data-idx="${i}" checked>
+      <span style="flex:1;">${g.name}</span>
+      <span style="color:var(--ink-soft);font-family:'IBM Plex Mono';font-size:12px;">${g.items.length} ${g.items.length===1?'item':'itens'} · ${kcal} kcal</span>
+    </label>`;
+  }).join('');
+  document.getElementById('repeatModalOverlay').style.display = 'flex';
+}
+function closeRepeatModal(){ document.getElementById('repeatModalOverlay').style.display = 'none'; }
+document.getElementById('repeatYesterdayBtn').addEventListener('click', openRepeatModal);
+document.getElementById('closeRepeatModal').addEventListener('click', closeRepeatModal);
+document.getElementById('cancelRepeatModal').addEventListener('click', closeRepeatModal);
+document.getElementById('repeatModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='repeatModalOverlay') closeRepeatModal(); });
+document.getElementById('confirmRepeatModal').addEventListener('click', ()=>{
+  const checkedIdx = Array.from(document.querySelectorAll('.repeat-meal-chk:checked')).map(c=>parseInt(c.dataset.idx));
+  if(checkedIdx.length===0){ closeRepeatModal(); return; }
+  const key = todayStr(currentDate);
+  if(!state.logs[key]) state.logs[key] = [];
+  checkedIdx.forEach(i=>{
+    repeatModalGroups[i].items.forEach(it=> state.logs[key].push({...it}));
+  });
+  saveState();
+  closeRepeatModal();
+  renderLog();
+});
+
+/* ============ refeições fixas (fixar/reaplicar quando quiser) ============ */
+function pinMeal(mealName){
+  const key = todayStr(currentDate);
+  const items = (state.logs[key] || []).filter(it => (it.meal||'') === mealName || (mealName==='Sem refeição' && !it.meal));
+  if(items.length===0){ alert('Essa refeição está vazia, não há o que fixar.'); return; }
+  if(state.fixedMeals[mealName] && !confirm(`Já existe uma refeição fixa "${mealName}". Substituir pelos itens de hoje?`)) return;
+  state.fixedMeals[mealName] = items.map(it => ({
+    foodId: it.foodId, name: it.name, grams: it.grams, meal: it.meal,
+    kcal: it.kcal, p: it.p, c: it.c, f: it.f, fb: it.fb, na: it.na,
+  }));
+  saveState();
+  renderFixedMeals();
+  renderLog();
+}
+function unpinMeal(mealName){
+  delete state.fixedMeals[mealName];
+  saveState();
+  renderFixedMeals();
+  renderLog();
+}
+function applyFixedMeal(mealName){
+  const template = state.fixedMeals[mealName];
+  if(!template) return;
+  const key = todayStr(currentDate);
+  if(!state.logs[key]) state.logs[key] = [];
+  template.forEach(it=> state.logs[key].push({...it}));
+  saveState();
+  renderLog();
+}
+function renderFixedMeals(){
+  const box = document.getElementById('fixedMealsBar');
+  const names = Object.keys(state.fixedMeals || {});
+  if(names.length===0){ box.style.display='none'; return; }
+  box.innerHTML = `<span class="fm-lbl">Refeições fixas — clique pra aplicar hoje</span>` + names.map(name=>`
+    <span class="fixed-meal-chip">
+      <button type="button" class="apply" data-name="${name}" title="Aplicar hoje">${name}</button>
+      <button type="button" class="unpin" data-name="${name}" title="Desfixar">✕</button>
+    </span>`).join('');
+  box.style.display='flex';
+  box.querySelectorAll('.apply').forEach(b=> b.addEventListener('click', ()=> applyFixedMeal(b.dataset.name)));
+  box.querySelectorAll('.unpin').forEach(b=> b.addEventListener('click', ()=> {
+    if(confirm(`Remover a refeição fixa "${b.dataset.name}"?`)) unpinMeal(b.dataset.name);
+  }));
+}
+
+
 /* ============ meta ============ */
 function getGoal(){
   return state.settings.goalKcal || 2000;
+}
+function setMacroBar(id, consumed, goalG){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const pct = goalG>0 ? (consumed/goalG)*100 : 0;
+  el.style.width = Math.min(pct,100)+'%';
+  el.classList.toggle('over', pct>100);
 }
 // converte a distribuição percentual de macros (Config) em gramas-meta, dada a meta calórica
 function getMacroGoalsGrams(goalKcal){
@@ -941,6 +1247,8 @@ const mealsContainer = document.getElementById('mealsContainer');
 const logEmpty = document.getElementById('logEmpty');
 function renderLog(){
   populateMealSelect();
+  renderRecentFoods();
+  renderFixedMeals();
   const key = todayStr(currentDate);
   const items = state.logs[key] || [];
   if(items.length===0){
@@ -961,13 +1269,19 @@ function renderLog(){
 
     mealsContainer.innerHTML = groups.map(g=>{
       const sub = g.items.reduce((a,it)=>a+it.kcal,0);
+      const isPinned = !!state.fixedMeals[g.name];
       return `<div class="meal-block">
-        <div class="meal-head"><span class="mh-name">${g.name}</span><span class="mh-sub">${Math.round(sub)} kcal</span></div>
+        <div class="meal-head">
+          <span class="mh-name">${g.name}</span>
+          <span class="mh-sub">${Math.round(sub)} kcal
+            <button class="pin-btn${isPinned?' pinned':''}" data-meal="${g.name}" title="${isPinned?'Atualizar refeição fixa':'Fixar esta refeição'}">📌</button>
+          </span>
+        </div>
         <table class="log">
           <thead><tr><th>Alimento</th><th class="num">Qtd (g)</th><th class="num">Kcal</th><th class="num">P</th><th class="num">C</th><th class="num">G</th><th></th></tr></thead>
           <tbody>
             ${g.items.map(it=>`
-              <tr>
+              <tr class="log-row" data-i="${it._i}" title="Clique para editar">
                 <td>${it.name}</td>
                 <td class="num">${it.grams}</td>
                 <td class="num">${it.kcal}</td>
@@ -980,11 +1294,20 @@ function renderLog(){
         </table>
       </div>`;
     }).join('');
-    mealsContainer.querySelectorAll('.rm-btn').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        items.splice(parseInt(b.dataset.i),1);
-        saveState(); renderLog();
+    mealsContainer.querySelectorAll('.pin-btn').forEach(b=>{
+      b.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        pinMeal(b.dataset.meal);
       });
+    });
+    mealsContainer.querySelectorAll('.rm-btn').forEach(b=>{
+      b.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeItemWithUndo(key, parseInt(b.dataset.i));
+      });
+    });
+    mealsContainer.querySelectorAll('.log-row').forEach(tr=>{
+      tr.addEventListener('click', ()=> startEditItem(key, parseInt(tr.dataset.i)));
     });
   }
   const totals = items.reduce((acc,it)=>({
@@ -1006,6 +1329,9 @@ function renderLog(){
   document.getElementById('pVd').textContent = (macroGoals.p>0 ? Math.round((totals.p/macroGoals.p)*100) : 0)+'%';
   document.getElementById('cVd').textContent = (macroGoals.c>0 ? Math.round((totals.c/macroGoals.c)*100) : 0)+'%';
   document.getElementById('fVd').textContent = (macroGoals.f>0 ? Math.round((totals.f/macroGoals.f)*100) : 0)+'%';
+  setMacroBar('pBar', totals.p, macroGoals.p);
+  setMacroBar('cBar', totals.c, macroGoals.c);
+  setMacroBar('fBar', totals.f, macroGoals.f);
 
   const diff = totals.kcal - goal;
   const pill = document.getElementById('statusPill'); const txt = document.getElementById('statusText');
@@ -1024,11 +1350,20 @@ document.getElementById('quickGoalSave').addEventListener('click', ()=>{
 });
 
 /* ============ relatório semanal ============ */
+function getCurrentWeekdayRange(){
+  const today = new Date();
+  const dow = today.getDay(); // 0=domingo,1=segunda,...,6=sábado
+  const diffToMonday = dow===0 ? -6 : 1-dow;
+  const monday = new Date(today); monday.setDate(today.getDate()+diffToMonday);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
 function renderWeek(){
   const goal = getGoal();
+  const monday = getCurrentWeekdayRange();
   const days = [];
-  for(let i=6;i>=0;i--){
-    const d = new Date(); d.setDate(d.getDate()-i);
+  for(let i=0;i<5;i++){ // segunda a sexta
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
     const key = todayStr(d);
     const items = state.logs[key] || [];
     const kcal = items.reduce((a,it)=>a+it.kcal,0);
@@ -1248,6 +1583,8 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       if(!data.logs || !data.settings) throw new Error('formato inválido');
       state = data;
       if(!state.customFoods) state.customFoods=[];
+      if(!state.recentFoods) state.recentFoods=[];
+      if(!state.fixedMeals) state.fixedMeals={};
       if(!state.settings.meals) state.settings.meals = DEFAULT_MEALS.slice();
       if(!state.settings.calc) state.settings.calc = defaultState().settings.calc;
       if(!state.settings.macros) state.settings.macros = {...DEFAULT_MACROS};
@@ -1442,6 +1779,41 @@ function generateXlsx(){
   XLSX.writeFile(wb, filename);
 }
 document.getElementById('genXlsxBtn').addEventListener('click', generateXlsx);
+
+/* ============ remover com desfazer (toast) ============ */
+let undoTimer = null;
+let undoData = null;
+function removeItemWithUndo(key, idx){
+  const arr = state.logs[key];
+  if(!arr || !arr[idx]) return;
+  const [removed] = arr.splice(idx, 1);
+  saveState();
+  renderLog();
+  undoData = { key, idx, item: removed };
+  showUndoToast(`Removido: ${removed.name}`);
+}
+function showUndoToast(text){
+  clearTimeout(undoTimer);
+  const toast = document.getElementById('undoToast');
+  document.getElementById('undoToastText').textContent = text;
+  toast.style.display = 'flex';
+  undoTimer = setTimeout(hideUndoToast, 6000);
+}
+function hideUndoToast(){
+  document.getElementById('undoToast').style.display = 'none';
+  undoData = null;
+}
+document.getElementById('undoToastBtn').addEventListener('click', ()=>{
+  if(!undoData) return;
+  const { key, idx, item } = undoData;
+  if(!state.logs[key]) state.logs[key] = [];
+  const pos = Math.min(idx, state.logs[key].length);
+  state.logs[key].splice(pos, 0, item);
+  saveState();
+  clearTimeout(undoTimer);
+  hideUndoToast();
+  renderLog();
+});
 
 /* ============ init ============ */
 refreshDateHeader();
