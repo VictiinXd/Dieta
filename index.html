@@ -6,36 +6,44 @@
 <title>Balanço — Diário Calórico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#FCFCF9;
-  --bg-soft:#F3F4EF;
+  --bg:#FFFFFF;
+  --bg-soft:#F4F6F4;
   --panel:#FFFFFF;
-  --ink:#161A17;
-  --ink-soft:#5B655D;
-  --line:rgba(22,26,23,0.14);
-  --line-strong:#161A17;
-  --accent:#1F6F54;
-  --accent-soft:#E3EFE9;
-  --amber:#C98A1F;
+  --sidebar-bg:#FFFFFF;
+  --ink:#12140F;
+  --ink-soft:#6B756C;
+  --line:rgba(18,20,15,0.12);
+  --line-strong:rgba(18,20,15,0.14);
+  --accent:#16A34A;
+  --accent-strong:#15803D;
+  --accent-soft:#E8F7EE;
+  --accent-ink:#FFFFFF;
+  --amber:#B7791F;
   --amber-soft:#FBF0DD;
-  --danger:#B23B32;
+  --danger:#C0392B;
   --danger-soft:#FBEAE8;
-  --shadow: 0 1px 0 rgba(22,26,23,0.06);
-  --radius: 2px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.04);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
 }
 [data-theme="dark"]{
-  --bg:#14181A;
-  --bg-soft:#1B211D;
-  --panel:#1B211D;
-  --ink:#EDEFEA;
-  --ink-soft:#9AA69D;
-  --line:rgba(237,239,234,0.14);
-  --line-strong:#EDEFEA;
-  --accent:#4FBE94;
-  --accent-soft:#1E2E27;
+  --bg:#0A0C0A;
+  --bg-soft:#151815;
+  --panel:#121412;
+  --sidebar-bg:#0A0C0A;
+  --ink:#F2F4F1;
+  --ink-soft:#8B958D;
+  --line:rgba(242,244,241,0.09);
+  --line-strong:rgba(242,244,241,0.12);
+  --accent:#22C55E;
+  --accent-strong:#4ADE80;
+  --accent-soft:#132A1B;
+  --accent-ink:#06210F;
   --amber:#E3AC4C;
   --amber-soft:#2E2717;
   --danger:#E17368;
@@ -49,45 +57,64 @@ body{
   font-family:'Inter',system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   transition:background .2s ease, color .2s ease;
+  font-variant-numeric:tabular-nums;
 }
-.mono{font-family:'IBM Plex Mono',monospace;}
-.display{font-family:'Archivo Black',system-ui,sans-serif;}
+.mono{font-family:'Inter',system-ui,sans-serif;font-variant-numeric:tabular-nums;}
+.display{font-family:'Inter',system-ui,sans-serif;font-weight:800;}
 a{color:inherit;}
 button{font-family:inherit;}
+svg.ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 ::selection{background:var(--accent);color:#fff;}
 
 /* ---------- layout shell ---------- */
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
-header.top{
+.topbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:22px 0 18px;border-bottom:3px solid var(--line-strong);
-  flex-wrap:wrap;gap:14px;
+  padding:16px 28px;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;gap:14px;background:var(--bg);
 }
-.brand{display:flex;align-items:baseline;gap:10px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .logo{width:34px;height:34px;flex-shrink:0;}
+.brand .brand-text{display:flex;flex-direction:column;line-height:1.15;}
 .brand h1{
-  font-family:'Archivo Black',sans-serif;
-  font-size:26px;letter-spacing:-0.5px;margin:0;
+  font-family:'Inter',sans-serif;font-weight:800;
+  font-size:21px;letter-spacing:-0.3px;margin:0;
 }
 .brand .tag{
-  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
-  text-transform:uppercase;letter-spacing:0.08em;
+  font-family:'Inter',sans-serif;font-size:11px;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:0.06em;font-weight:600;
 }
-nav.tabs{display:flex;gap:4px;background:var(--bg-soft);padding:4px;border-radius:999px;}
-nav.tabs button{
-  border:none;background:transparent;color:var(--ink-soft);
-  padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;
-  cursor:pointer;transition:.15s;white-space:nowrap;
+.app-shell{display:flex;align-items:flex-start;}
+.sidebar{
+  width:210px;flex-shrink:0;background:var(--sidebar-bg);
+  padding:20px 14px;display:flex;flex-direction:column;gap:2px;
+  min-height:calc(100vh - 68px);border-right:1px solid var(--line);
+  position:sticky;top:0;
 }
-nav.tabs button.active{background:var(--ink);color:var(--bg);}
-[data-theme="dark"] nav.tabs button.active{background:var(--accent);color:#0d130f;}
+.sidebar .side-btn{
+  display:flex;align-items:center;gap:11px;border:none;background:transparent;
+  color:var(--ink-soft);padding:11px 14px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:600;cursor:pointer;transition:.15s;text-align:left;width:100%;
+}
+.sidebar .side-btn:hover{background:var(--bg-soft);color:var(--ink);}
+.sidebar .side-btn.active{background:var(--accent);color:var(--accent-ink);}
+.sidebar .side-spacer{flex:1;}
+.sidebar .theme-row{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13.5px;
+  font-weight:600;color:var(--ink-soft);border-top:1px solid var(--line);margin-top:10px;padding-top:16px;
+}
+.main-area{flex:1;min-width:0;padding:26px 28px 80px;}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
+nav.tabs{display:none;}
 
 .iconbtn{
   border:1px solid var(--line);background:var(--panel);color:var(--ink);
-  width:38px;height:38px;border-radius:999px;cursor:pointer;font-size:16px;
+  width:38px;height:38px;border-radius:var(--radius-pill);cursor:pointer;font-size:16px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 
-.view{display:none;padding-top:26px;}
+.view{display:none;}
+
 .view.active{display:block;animation:fade .25s ease;}
 @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
@@ -110,34 +137,38 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
   width:32px;height:32px;border-radius:999px;cursor:pointer;
 }
 .datebar .cur{font-weight:700;font-size:15px;flex:1;text-align:center;}
-.datebar .cur small{display:block;font-weight:400;color:var(--ink-soft);font-size:11px;
-  font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+.datebar .cur small{display:block;font-weight:600;color:var(--ink-soft);font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;}
 
 /* search / add food */
 .search-box{position:relative;margin-bottom:16px;}
 .search-row{display:flex;gap:8px;}
+.search-input-wrap{position:relative;flex:1;display:flex;align-items:center;}
+.search-input-wrap svg.ic{position:absolute;left:13px;color:var(--ink-soft);width:16px;height:16px;pointer-events:none;}
 .search-row input[type="text"]{
-  flex:1;padding:11px 13px;border:1.5px solid var(--line-strong);border-radius:2px;
-  background:var(--bg);color:var(--ink);font-size:14px;font-family:'Inter';
+  width:100%;padding:12px 14px 12px 38px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--panel);color:var(--ink);font-size:14px;font-family:'Inter';
 }
 .search-row input[type="text"]:focus{outline:2px solid var(--accent);outline-offset:1px;}
 .qty-input{
-  width:76px;padding:11px 8px;border:1.5px solid var(--line-strong);border-radius:2px;
-  background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono';font-size:14px;text-align:center;
+  width:76px;padding:12px 8px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--panel);color:var(--ink);font-size:14px;text-align:center;
 }
 .btn{
-  border:none;background:var(--ink);color:var(--bg);padding:0 18px;border-radius:2px;
+  border:none;background:var(--ink);color:var(--bg);padding:0 18px;border-radius:var(--radius-sm);
   font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.02em;
 }
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 .btn.accent{background:var(--accent);color:#fff;}
-.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line-strong);}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong);}
+.btn.pill{border-radius:var(--radius-pill);}
 .btn.small{padding:6px 12px;font-size:12px;}
+.btn-icon-txt{display:inline-flex;align-items:center;gap:8px;}
 
 .suggestions{
   position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);
-  border:1.5px solid var(--line-strong);max-height:320px;overflow-y:auto;z-index:20;
-  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  border:1px solid var(--line-strong);border-radius:var(--radius);max-height:320px;overflow-y:auto;z-index:20;
+  box-shadow:0 12px 28px rgba(0,0,0,.16);
 }
 .suggestions .sug-item{
   padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--line);
@@ -145,19 +176,27 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 }
 .suggestions .sug-item:hover, .suggestions .sug-item.hl{background:var(--accent-soft);}
 .suggestions .sug-item .nm{flex:1;}
-.suggestions .sug-item .cat{color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;
-  font-family:'IBM Plex Mono';letter-spacing:.05em;}
-.suggestions .sug-item .kc{font-family:'IBM Plex Mono';color:var(--ink-soft);font-size:12px;white-space:nowrap;}
+.suggestions .sug-item .cat{color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;}
+.suggestions .sug-item .kc{color:var(--ink-soft);font-size:12px;white-space:nowrap;}
 .suggestions .empty{padding:14px;color:var(--ink-soft);font-size:13px;}
 .suggestions .addcustom{padding:10px 13px;color:var(--accent);font-weight:600;cursor:pointer;font-size:13px;}
 
-.recent-foods{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px;}
+.section-lbl{
+  font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;
+  font-weight:700;display:block;margin-bottom:8px;
+}
+
+.recent-foods{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px;
+  position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);
+  border:1px solid var(--line-strong);border-radius:var(--radius);padding:12px 14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.16);z-index:19;}
 .recent-foods .rf-lbl{
   font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
-  font-family:'IBM Plex Mono';flex-basis:100%;margin-bottom:1px;
+  font-weight:700;flex-basis:100%;margin-bottom:1px;
 }
 .recent-chip{
-  border:1px solid var(--line);background:var(--bg-soft);border-radius:999px;
+  border:1px solid var(--line);background:var(--bg-soft);border-radius:var(--radius-pill);
   padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;
   max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   line-height:1.3;
@@ -166,30 +205,32 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 
 .selected-bar{
   display:flex;align-items:center;gap:10px;margin-top:8px;padding:9px 10px 9px 14px;
-  background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:2px;
+  background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);
 }
 .selected-bar .sb-info{flex:1;min-width:0;display:flex;flex-direction:column;}
 .selected-bar .sb-name{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.selected-bar .sb-kcal{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
+.selected-bar .sb-kcal{font-size:11.5px;color:var(--ink-soft);}
 .selected-bar .iconbtn{width:26px;height:26px;font-size:14px;border:none;background:transparent;}
 
-/* food log — lista compacta (não mais tabela de 6 colunas apertadas) */
+/* food log — lista compacta */
 .log-list{display:flex;flex-direction:column;}
 .log-item{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
-  padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;flex-wrap:wrap;
+  padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer;flex-wrap:wrap;
 }
 .log-item:last-child{border-bottom:none;}
 .log-item:hover{background:var(--bg-soft);}
 .li-main{flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:2px;}
-.li-name{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.li-qty{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
-.li-macros{display:flex;align-items:baseline;gap:12px;flex-shrink:0;font-family:'IBM Plex Mono';}
-.li-kcal{font-weight:800;font-size:13.5px;min-width:62px;text-align:right;}
-.li-macro{color:var(--ink-soft);font-size:11.5px;white-space:nowrap;}
-.li-macro b{color:var(--ink);font-weight:700;font-size:12.5px;}
-.rm-btn{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 6px;flex-shrink:0;}
-.rm-btn:hover{color:var(--danger);}
+.li-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.li-qty{font-size:12px;color:var(--ink-soft);}
+.li-macros{display:flex;align-items:baseline;gap:14px;flex-shrink:0;}
+.li-kcal{font-weight:700;font-size:14px;min-width:64px;text-align:right;}
+.li-macro{color:var(--ink-soft);font-size:13px;white-space:nowrap;}
+.rm-btn{
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:17px;
+  padding:2px 8px;flex-shrink:0;letter-spacing:1px;border-radius:var(--radius-sm);
+}
+.rm-btn:hover{color:var(--ink);background:var(--bg-soft);}
 .empty-state{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
 
 @media (max-width:480px){
@@ -197,50 +238,49 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
   .li-macros{width:100%;justify-content:flex-start;order:3;}
 }
 
-/* nutrition label card - signature element */
+/* resumo do dia — card arredondado com barra de progresso */
 .label-card{
-  border:3px solid var(--line-strong);border-radius:2px;padding:16px 18px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;background:var(--panel);
 }
 .label-card .lc-title{
-  font-family:'Archivo Black';font-size:20px;letter-spacing:-.3px;margin:0 0 2px;
+  font-size:19px;font-weight:800;letter-spacing:-.2px;margin:0 0 2px;
 }
-.label-card .lc-sub{font-size:11px;color:var(--ink-soft);font-family:'IBM Plex Mono';
-  text-transform:uppercase;letter-spacing:.05em;}
-.rule-thick{border:none;border-top:9px solid var(--line-strong);margin:10px 0 8px;}
-.rule{border:none;border-top:1px solid var(--line);margin:7px 0;}
-.rule-mid{border:none;border-top:5px solid var(--line-strong);margin:9px 0 6px;}
-.kcal-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 2px;}
-.kcal-row .k-label{font-size:16px;font-weight:800;}
-.kcal-row .k-val{font-family:'Archivo Black';font-size:34px;}
-.kcal-row .k-val small{font-family:'Inter';font-size:14px;font-weight:600;color:var(--ink-soft);}
-.vd-head{display:flex;justify-content:flex-end;font-size:10px;color:var(--ink-soft);
-  text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono';padding:2px 0;}
-.nutrow{padding:7px 0;border-bottom:1px solid var(--line);}
-.nutrow:last-child{border-bottom:none;}
-.nutrow-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;gap:10px;}
-.nutrow .nm{font-weight:600;flex-shrink:0;}
-.nutrow .vv{font-family:'IBM Plex Mono';display:flex;align-items:baseline;gap:12px;}
-.nutrow .vv-amount{white-space:nowrap;}
-.nutrow .vv-amount b{font-weight:700;}
+.label-card .lc-sub{font-size:11.5px;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+.rule-thick{border:none;height:6px;border-radius:3px;background:var(--bg-soft);margin:16px 0 18px;overflow:hidden;position:relative;}
+.rule-thick .rule-thick-fill{position:absolute;inset:0;width:0%;background:var(--accent);border-radius:3px;transition:width .4s ease;}
+.rule{border:none;border-top:1px solid var(--line);margin:14px 0;}
+.rule-mid{display:none;}
+.kcal-row{display:flex;justify-content:space-between;align-items:baseline;padding:0;}
+.kcal-row .k-label{font-size:14px;font-weight:700;color:var(--ink-soft);}
+.kcal-row .k-val{font-size:32px;font-weight:800;}
+.kcal-row .k-val small{font-size:15px;font-weight:600;color:var(--ink-soft);}
+.vd-head{display:none;}
+.nutrow{padding:10px 0;}
+.nutrow-top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;gap:10px;}
+.nutrow .nm{font-weight:700;flex-shrink:0;}
+.nutrow .vv{display:flex;align-items:baseline;gap:12px;}
+.nutrow .vv-amount{white-space:nowrap;color:var(--ink-soft);font-size:13.5px;}
+.nutrow .vv-amount b{font-weight:700;color:var(--ink);font-size:14px;}
 .nutrow .vv-of{color:var(--ink-soft);margin:0 2px;font-weight:400;}
-.nutrow .vv-unit{color:var(--ink-soft);margin-left:2px;font-size:12px;}
-.nutrow .vd{color:var(--ink-soft);min-width:36px;text-align:right;font-weight:700;}
-.nutrow-bar{height:4px;border-radius:2px;background:var(--bg-soft);overflow:hidden;margin-top:5px;}
-.nutrow-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease;}
+.nutrow .vv-unit{color:var(--ink-soft);margin-left:2px;font-size:12.5px;}
+.nutrow .vd{color:var(--ink-soft);min-width:32px;text-align:right;font-weight:700;font-size:13px;}
+.nutrow-bar{height:5px;border-radius:3px;background:var(--bg-soft);overflow:hidden;margin-top:8px;}
+.nutrow-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease;}
 .nutrow-bar-fill.over{background:var(--danger);}
 .status-pill{
-  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
-  font-size:12px;font-weight:700;margin-top:12px;
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-pill);
+  font-size:12.5px;font-weight:700;margin-top:6px;
 }
 .status-pill.ok{background:var(--accent-soft);color:var(--accent);}
 .status-pill.warn{background:var(--amber-soft);color:var(--amber);}
 .status-pill.over{background:var(--danger-soft);color:var(--danger);}
 .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
 
-.meta-edit-row{display:flex;gap:8px;align-items:center;margin-top:14px;}
+.meta-edit-row{display:flex;gap:8px;align-items:center;margin-top:18px;}
 .meta-edit-row input{
-  width:90px;padding:8px 10px;border:1.5px solid var(--line-strong);border-radius:2px;
-  background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;text-align:center;
+  width:90px;padding:9px 10px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--panel);color:var(--ink);font-size:13px;text-align:center;
 }
 
 /* week view */
@@ -248,8 +288,8 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 @media (max-width:760px){.week-summary{grid-template-columns:repeat(2,1fr);}}
 .stat-card{border:1px solid var(--line);border-radius:2px;padding:16px;background:var(--panel);}
 .stat-card .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
-  font-family:'IBM Plex Mono';margin-bottom:8px;}
-.stat-card .val{font-family:'Archivo Black';font-size:24px;}
+  margin-bottom:8px;}
+.stat-card .val{font-weight:800;font-size:24px;}
 .stat-card .val.pos{color:var(--accent);}
 .stat-card .val.neg{color:var(--danger);}
 .stat-card .sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
@@ -262,13 +302,13 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 .bar-fill.under{background:var(--accent);}
 .bar-fill.over{background:var(--danger);}
 .bar-goal-line{position:absolute;left:-6px;right:-6px;border-top:2px dashed var(--ink-soft);}
-.bar-col .day-lbl{font-size:11px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono';}
-.bar-col .day-val{font-size:10.5px;color:var(--ink-soft);font-family:'IBM Plex Mono';margin-top:2px;}
+.bar-col .day-lbl{font-size:11px;color:var(--ink-soft);margin-top:8px;}
+.bar-col .day-val{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
 
 .week-table{width:100%;border-collapse:collapse;font-size:13px;}
 .week-table th{text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);
-  padding:0 8px 8px;border-bottom:2px solid var(--line-strong);font-family:'IBM Plex Mono';}
-.week-table td{padding:9px 8px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono';font-size:13px;}
+  padding:0 8px 8px;border-bottom:2px solid var(--line-strong);}
+.week-table td{padding:9px 8px;border-bottom:1px solid var(--line);font-size:13px;}
 .week-table td.pos{color:var(--accent);font-weight:700;}
 .week-table td.neg{color:var(--danger);font-weight:700;}
 
@@ -286,26 +326,33 @@ nav.tabs button.active{background:var(--ink);color:var(--bg);}
 .radio-row{display:flex;gap:16px;margin-bottom:14px;}
 .radio-row label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:500;cursor:pointer;}
 .divider-lbl{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
-  margin:18px 0 10px;font-family:'IBM Plex Mono';border-top:1px solid var(--line);padding-top:14px;}
+  margin:18px 0 10px;border-top:1px solid var(--line);padding-top:14px;}
 .help{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
 .export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
 input[type=file]{display:none;}
 
-footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-size:11.5px;font-family:'IBM Plex Mono';}
+footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-size:11.5px;}
 
 /* meal sections */
 .meal-select{
-  padding:11px 8px;border:1.5px solid var(--line-strong);border-radius:2px;
-  background:var(--bg);color:var(--ink);font-family:'Inter';font-size:13px;max-width:150px;
+  padding:12px 10px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--panel);color:var(--ink);font-family:'Inter';font-size:13px;max-width:150px;
 }
-.meal-block{margin-bottom:18px;}
+.meal-block{
+  margin-bottom:14px;border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;background:var(--panel);
+}
 .meal-block:last-child{margin-bottom:0;}
 .meal-head{
-  display:flex;justify-content:space-between;align-items:baseline;
-  border-bottom:2px solid var(--line-strong);padding-bottom:6px;margin-bottom:2px;
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;
 }
-.meal-head .mh-name{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;}
-.meal-head .mh-sub{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;}
+.meal-head .mh-name{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:9px;}
+.meal-head .mh-name .mh-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);flex-shrink:0;}
+.meal-head .mh-sub{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;font-weight:600;}
+.meal-head .chevron{transition:transform .2s ease;color:var(--ink-soft);}
+.meal-block.collapsed .chevron{transform:rotate(180deg);}
+.meal-block.collapsed .log-list{display:none;}
+.log-list{margin-top:12px;border-top:1px solid var(--line);}
 .pin-btn{
   border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:13px;
   padding:2px 4px;line-height:1;opacity:.55;transition:.15s;
@@ -313,15 +360,15 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .pin-btn:hover{opacity:1;color:var(--amber);}
 .pin-btn.pinned{opacity:1;color:var(--amber);}
 
-.quick-actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.quick-actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
 .fixed-meals{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:14px;}
 .fixed-meals .fm-lbl{
   font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
-  font-family:'IBM Plex Mono';flex-basis:100%;margin-bottom:1px;
+  font-weight:700;flex-basis:100%;margin-bottom:1px;
 }
 .fixed-meal-chip{
   display:flex;align-items:center;gap:6px;background:var(--amber-soft);border:1px solid var(--amber);
-  border-radius:999px;padding:5px 6px 5px 13px;font-size:12px;font-weight:600;color:var(--amber);
+  border-radius:var(--radius-pill);padding:5px 6px 5px 13px;font-size:12px;font-weight:600;color:var(--amber);
 }
 .fixed-meal-chip button.apply{border:none;background:transparent;color:var(--amber);cursor:pointer;font-weight:700;
   padding:2px 4px;font-size:12px;text-decoration:underline;}
@@ -358,12 +405,12 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .obj-card:hover{border-color:var(--line-strong);}
 .obj-card.sel{border-color:var(--accent);background:var(--accent-soft);}
 .obj-card .oc-name{font-weight:700;display:block;}
-.obj-card .oc-sub{color:var(--ink-soft);font-size:11.5px;font-family:'IBM Plex Mono';}
+.obj-card .oc-sub{color:var(--ink-soft);font-size:11.5px;}
 .result-card{border:3px solid var(--line-strong);border-radius:2px;padding:18px;}
 .result-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);}
 .result-row:last-child{border-bottom:none;}
 .result-row .r-lbl{font-size:13px;color:var(--ink-soft);}
-.result-row .r-val{font-family:'Archivo Black';font-size:22px;}
+.result-row .r-val{font-weight:800;font-size:22px;}
 .result-row.hero{border-bottom:2px solid var(--line-strong);margin-bottom:4px;padding-bottom:14px;}
 .result-row.hero .r-val{font-size:36px;color:var(--accent);}
 .calc-applied-note{font-size:12px;color:var(--ink-soft);margin-top:12px;font-weight:600;line-height:1.5;}
@@ -382,7 +429,7 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
   padding:22px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;
 }
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-.modal-head h3{margin:0;font-size:16px;font-family:'Archivo Black';font-weight:400;letter-spacing:-.2px;}
+.modal-head h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.2px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:10px;}
 
 /* ---- área de impressão / PDF ---- */
@@ -396,21 +443,21 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
   }
   @page{margin:14mm;}
 }
-.print-title{font-family:'Archivo Black',sans-serif;font-size:26px;margin:0;}
-.print-sub{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#444;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.print-title{font-family:'Inter',sans-serif;font-weight:800;font-size:26px;margin:0;}
+.print-sub{font-size:11.5px;color:#444;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
 .print-rule-thick{border:none;border-top:6px solid #111;margin:10px 0 16px;}
 .print-kpis{display:flex;gap:24px;margin-bottom:18px;}
-.print-kpis .pk-lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#555;font-family:'IBM Plex Mono';}
-.print-kpis .pk-val{display:block;font-family:'Archivo Black';font-size:19px;margin-top:2px;}
+.print-kpis .pk-lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#555;}
+.print-kpis .pk-val{display:block;font-weight:800;font-size:19px;margin-top:2px;}
 table.print-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12.5px;}
-table.print-table th{text-align:left;border-bottom:2.5px solid #111;padding:5px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono';}
-table.print-table td{padding:5px 8px;border-bottom:1px solid #ccc;font-family:'IBM Plex Mono';}
+table.print-table th{text-align:left;border-bottom:2.5px solid #111;padding:5px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;}
+table.print-table td{padding:5px 8px;border-bottom:1px solid #ccc;}
 table.print-table.small{margin-bottom:10px;font-size:11.5px;}
 table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 .print-day-block{margin-bottom:16px;break-inside:avoid;}
 .print-day-title{font-weight:800;font-size:13.5px;border-bottom:2px solid #111;padding-bottom:4px;margin-bottom:6px;text-transform:capitalize;}
 .print-meal-name{font-weight:700;font-size:12px;color:#333;margin:8px 0 3px;}
-.print-footer{font-size:10.5px;color:#666;font-family:'IBM Plex Mono';margin-top:16px;border-top:1px solid #ccc;padding-top:8px;}
+.print-footer{font-size:10.5px;color:#666;margin-top:16px;border-top:1px solid #ccc;padding-top:8px;}
 
 /* toast de desfazer */
 .toast{
@@ -424,21 +471,48 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 </style>
 </head>
 <body data-theme="light">
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="17" cy="17" r="17" fill="var(--accent)"/>
+      <path d="M11 22c0-7 4-11 11-11 0 7-4 11-11 11z" fill="#fff"/>
+      <path d="M11 22c2-4 5-7 9-9" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    </svg>
+    <div class="brand-text">
       <h1>Balanço</h1>
-      <span class="tag">registro calórico · base TACO</span>
+      <span class="tag">Registro calórico · Base TACO</span>
     </div>
-    <nav class="tabs">
-      <button class="tab-btn active" data-view="hoje">Hoje</button>
-      <button class="tab-btn" data-view="semana">Semana</button>
-      <button class="tab-btn" data-view="calc">Calculadora</button>
-      <button class="tab-btn" data-view="config">Config</button>
-      <button class="tab-btn" data-view="export">Exportar</button>
-    </nav>
-    <button class="iconbtn" id="themeToggle" title="Alternar tema">🌙</button>
-  </header>
+  </div>
+</header>
+<div class="app-shell">
+  <nav class="sidebar">
+    <button class="side-btn tab-btn active" data-view="hoje">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>Hoje</span>
+    </button>
+    <button class="side-btn tab-btn" data-view="semana">
+      <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 3v3M16 3v3"/></svg>
+      <span>Semana</span>
+    </button>
+    <button class="side-btn tab-btn" data-view="calc">
+      <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>
+      <span>Calculadora</span>
+    </button>
+    <button class="side-btn tab-btn" data-view="config">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      <span>Configurações</span>
+    </button>
+    <button class="side-btn tab-btn" data-view="export">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M4 16.5v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5 5 5"/><path d="M12 4v13"/></svg>
+      <span>Exportar</span>
+    </button>
+    <div class="side-spacer"></div>
+    <div class="theme-row">
+      <button class="iconbtn" id="themeToggle" title="Alternar tema" style="width:30px;height:30px;font-size:14px;">🌙</button>
+      <span>Modo escuro</span>
+    </div>
+  </nav>
+  <div class="main-area">
 
   <!-- ===================== HOJE ===================== -->
   <section class="view active" id="view-hoje">
@@ -451,13 +525,19 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
             <button id="dayNext">›</button>
           </div>
           <div class="quick-actions-row">
-            <button class="btn ghost small" id="repeatYesterdayBtn" type="button">↺ Repetir alimentos de ontem</button>
+            <button class="btn ghost small pill btn-icon-txt" id="repeatYesterdayBtn" type="button">
+              <svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              Repetir alimentos de ontem
+            </button>
           </div>
           <div class="fixed-meals" id="fixedMealsBar" style="display:none;"></div>
           <div class="search-box">
             <div class="recent-foods" id="recentFoods" style="display:none;"></div>
             <div class="search-row">
-              <input type="text" id="foodSearch" placeholder="Buscar por palavra-chave (ex: frango grelhado, arroz, feijão)…" autocomplete="off">
+              <div class="search-input-wrap">
+                <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="foodSearch" placeholder="Buscar por alimento, marca ou descrição…" autocomplete="off">
+              </div>
               <input type="number" id="qtyInput" class="qty-input" value="100" min="1" step="1">
               <select class="meal-select" id="mealSelect"></select>
             </div>
@@ -479,7 +559,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <div class="label-card">
           <p class="lc-title">Resumo do dia</p>
           <p class="lc-sub" id="labelDate">--</p>
-          <hr class="rule-thick">
+          <div class="rule-thick"><div class="rule-thick-fill" id="kcalBarFill" style="width:0%"></div></div>
           <div class="kcal-row">
             <span class="k-label">Calorias</span>
             <span class="k-val"><span id="kcalTotal">0</span> <small>/ <span id="kcalGoalShown">2000</span> kcal</small></span>
@@ -514,7 +594,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
             <div class="nutrow-top"><span class="nm">Sódio</span><span class="vv"><span class="vv-amount"><b id="naTotal">0</b><span class="vv-unit">mg</span></span></span></div>
           </div>
           <hr class="rule">
-          <div id="statusPill" class="status-pill ok"><span class="dot"></span><span id="statusText">Dentro da meta</span></div>
+          <div id="statusPill" class="status-pill ok"><span id="statusText">🎯 Dentro da meta</span></div>
           <div class="meta-edit-row">
             <span style="font-size:12px;color:var(--ink-soft);">Meta rápida:</span>
             <input type="number" id="quickGoal" step="10">
@@ -751,6 +831,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
   </div>
 
   <footer class="foot">Dados nutricionais: TACO 4ª ed. (NEPA/UNICAMP) · Tudo salvo localmente no seu navegador</footer>
+  </div>
 </div>
 
 <script>
@@ -937,6 +1018,7 @@ function renderSuggestions(query){
   });
 }
 foodSearch.addEventListener('input', (e)=>{ clearSelection(); renderSuggestions(e.target.value); renderRecentFoods(); });
+foodSearch.addEventListener('focus', ()=>{ searchFocused = true; renderRecentFoods(); });
 foodSearch.addEventListener('keydown', (e)=>{
   const items = suggBox.querySelectorAll('.sug-item');
   if(e.key==='ArrowDown'){ e.preventDefault(); highlightIdx=Math.min(highlightIdx+1, items.length-1); updateHl(items); }
@@ -945,7 +1027,13 @@ foodSearch.addEventListener('keydown', (e)=>{
   else if(e.key==='Escape'){ suggBox.style.display='none'; }
 });
 function updateHl(items){ items.forEach((it,i)=> it.classList.toggle('hl', i===highlightIdx)); if(items[highlightIdx]) items[highlightIdx].scrollIntoView({block:'nearest'}); }
-document.addEventListener('click', (e)=>{ if(!e.target.closest('.search-box')) suggBox.style.display='none'; });
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.search-box')){
+    suggBox.style.display='none';
+    searchFocused = false;
+    document.getElementById('recentFoods').style.display='none';
+  }
+});
 
 /* ============ modal: novo alimento personalizado ============ */
 const foodModalOverlay = document.getElementById('foodModalOverlay');
@@ -1024,6 +1112,7 @@ function selectFood(f){
   editingContext = null; // selecionar um alimento novo cancela qualquer edição em andamento
   selectedFood = f;
   suggBox.style.display='none';
+  document.getElementById('recentFoods').style.display='none';
   document.getElementById('selectedFoodName').textContent = f.n;
   document.getElementById('selectedFoodKcal').textContent = `${f.kcal} kcal / 100g`;
   document.getElementById('confirmAddBtn').textContent = 'Adicionar';
@@ -1136,10 +1225,11 @@ function pushRecentFood(foodId){
   state.recentFoods = state.recentFoods.slice(0,12);
   saveState();
 }
+let searchFocused = false;
 function renderRecentFoods(){
   const box = document.getElementById('recentFoods');
   const ids = state.recentFoods || [];
-  if(ids.length===0 || foodSearch.value.trim()!==''){ box.style.display='none'; return; }
+  if(!searchFocused || ids.length===0 || foodSearch.value.trim()!==''){ box.style.display='none'; return; }
   const foods = allFoods();
   const list = ids.map(id=>foods.find(f=>f.id===id)).filter(Boolean).slice(0,8);
   if(list.length===0){ box.style.display='none'; return; }
@@ -1166,7 +1256,7 @@ function openRepeatModal(){
     return `<label style="display:flex;align-items:center;gap:10px;font-size:13.5px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
       <input type="checkbox" class="repeat-meal-chk" data-idx="${i}" checked>
       <span style="flex:1;">${g.name}</span>
-      <span style="color:var(--ink-soft);font-family:'IBM Plex Mono';font-size:12px;">${g.items.length} ${g.items.length===1?'item':'itens'} · ${kcal} kcal</span>
+      <span style="color:var(--ink-soft);font-size:12px;">${g.items.length} ${g.items.length===1?'item':'itens'} · ${kcal} kcal</span>
     </label>`;
   }).join('');
   document.getElementById('repeatModalOverlay').style.display = 'flex';
@@ -1285,10 +1375,11 @@ function renderLog(){
       const sub = g.items.reduce((a,it)=>a+it.kcal,0);
       const isPinned = !!state.fixedMeals[g.name];
       return `<div class="meal-block">
-        <div class="meal-head">
-          <span class="mh-name">${g.name}</span>
+        <div class="meal-head" data-meal-toggle="${g.name}">
+          <span class="mh-name"><span class="mh-dot"></span>${g.name}</span>
           <span class="mh-sub">${Math.round(sub)} kcal
             <button class="pin-btn${isPinned?' pinned':''}" data-meal="${g.name}" title="${isPinned?'Atualizar refeição fixa':'Fixar esta refeição'}">📌</button>
+            <svg class="ic chevron" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M6 9l6 6 6-6"/></svg>
           </span>
         </div>
         <div class="log-list">
@@ -1304,7 +1395,7 @@ function renderLog(){
                 <span class="li-macro"><b>${it.c}</b>C</span>
                 <span class="li-macro"><b>${it.f}</b>G</span>
               </div>
-              <button class="rm-btn" data-i="${it._i}" title="Remover">✕</button>
+              <button class="rm-btn" data-i="${it._i}" title="Remover">⋮</button>
             </div>`).join('')}
         </div>
       </div>`;
@@ -1314,6 +1405,9 @@ function renderLog(){
         e.stopPropagation();
         pinMeal(b.dataset.meal);
       });
+    });
+    mealsContainer.querySelectorAll('.meal-head').forEach(h=>{
+      h.addEventListener('click', ()=> h.closest('.meal-block').classList.toggle('collapsed'));
     });
     mealsContainer.querySelectorAll('.rm-btn').forEach(b=>{
       b.addEventListener('click', (e)=>{
@@ -1332,6 +1426,7 @@ function renderLog(){
   const macroGoals = getMacroGoalsGrams(goal);
   document.getElementById('kcalTotal').textContent = Math.round(totals.kcal);
   document.getElementById('kcalGoalShown').textContent = goal;
+  document.getElementById('kcalBarFill').style.width = Math.min((totals.kcal/goal)*100, 100)+'%';
   document.getElementById('pTotal').textContent = totals.p.toFixed(1);
   document.getElementById('cTotal').textContent = totals.c.toFixed(1);
   document.getElementById('fTotal').textContent = totals.f.toFixed(1);
@@ -1351,9 +1446,9 @@ function renderLog(){
   const diff = totals.kcal - goal;
   const pill = document.getElementById('statusPill'); const txt = document.getElementById('statusText');
   pill.className = 'status-pill';
-  if(diff <= -50){ pill.classList.add('ok'); txt.textContent = `Déficit de ${Math.round(-diff)} kcal`; }
-  else if(diff > 50){ pill.classList.add('over'); txt.textContent = `Superávit de ${Math.round(diff)} kcal`; }
-  else { pill.classList.add('warn'); txt.textContent = 'Praticamente na meta'; }
+  if(diff <= -50){ pill.classList.add('ok'); txt.textContent = `🎯 Déficit de ${Math.round(-diff)} kcal`; }
+  else if(diff > 50){ pill.classList.add('over'); txt.textContent = `🎯 Superávit de ${Math.round(diff)} kcal`; }
+  else { pill.classList.add('warn'); txt.textContent = '🎯 Praticamente na meta'; }
 
   document.getElementById('quickGoal').value = goal;
 }
