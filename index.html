@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#FFFFFF;
@@ -103,38 +102,7 @@ svg.ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;strok
   display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13.5px;
   font-weight:600;color:var(--ink-soft);border-top:1px solid var(--line);margin-top:10px;padding-top:16px;
 }
-.sidebar .account-row{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:11px 14px 4px;font-size:12px;color:var(--ink-soft);
-}
-.sidebar .account-row .acc-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
-.sidebar .account-row button{
-  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:11.5px;
-  font-weight:700;text-decoration:underline;flex-shrink:0;
-}
-.sidebar .account-row button:hover{color:var(--danger);}
 .main-area{flex:1;min-width:0;padding:26px 28px 80px;}
-
-/* ---- tela de login/cadastro ---- */
-.auth-overlay{
-  position:fixed;inset:0;background:var(--bg);z-index:500;
-  display:flex;align-items:center;justify-content:center;padding:20px;
-}
-.auth-card{
-  width:100%;max-width:380px;border:1px solid var(--line);border-radius:var(--radius);
-  padding:32px 28px;background:var(--panel);box-shadow:0 12px 32px rgba(0,0,0,.08);
-}
-.auth-title{font-size:17px;font-weight:700;margin:0 0 18px;text-align:center;}
-.auth-msg{
-  font-size:12.5px;padding:10px 12px;border-radius:var(--radius-sm);margin-top:10px;
-  background:var(--danger-soft);color:var(--danger);
-}
-.auth-msg.ok{background:var(--accent-soft);color:var(--accent);}
-.auth-switch{
-  display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;
-  font-size:13px;color:var(--ink-soft);
-}
-.auth-overlay .link-btn{display:block;margin:0 auto;text-align:center;}
 
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
 nav.tabs{display:none;}
@@ -503,44 +471,6 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 </style>
 </head>
 <body data-theme="light">
-
-<div class="auth-overlay" id="authOverlay">
-  <div class="auth-card">
-    <div class="brand" style="justify-content:center;margin-bottom:22px;">
-      <svg class="logo" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="17" cy="17" r="17" fill="var(--accent)"/>
-        <path d="M11 22c0-7 4-11 11-11 0 7-4 11-11 11z" fill="#fff"/>
-        <path d="M11 22c2-4 5-7 9-9" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-      </svg>
-      <div class="brand-text">
-        <h1>Balanço</h1>
-        <span class="tag">Registro calórico · Base TACO</span>
-      </div>
-    </div>
-
-    <h2 class="auth-title" id="authTitle">Entrar na sua conta</h2>
-
-    <div class="field">
-      <label>E-mail</label>
-      <input type="email" id="authEmail" autocomplete="email" placeholder="voce@email.com">
-    </div>
-    <div class="field">
-      <label>Senha</label>
-      <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••">
-    </div>
-
-    <div class="auth-msg" id="authMsg" style="display:none;"></div>
-
-    <button class="btn accent" id="authSubmitBtn" style="width:100%;margin-top:6px;">Entrar</button>
-
-    <div class="auth-switch">
-      <span id="authSwitchText">Ainda não tem conta?</span>
-      <button type="button" class="link-btn" id="authSwitchBtn">Criar conta</button>
-    </div>
-    <button type="button" class="link-btn" id="authForgotBtn" style="margin-top:10px;">Esqueci minha senha</button>
-  </div>
-</div>
-
 <header class="topbar">
   <div class="brand">
     <svg class="logo" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
@@ -577,10 +507,6 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
       <span>Exportar</span>
     </button>
     <div class="side-spacer"></div>
-    <div class="account-row">
-      <span class="acc-email" id="accountEmail">—</span>
-      <button type="button" id="logoutBtn">Sair</button>
-    </div>
     <div class="theme-row">
       <button class="iconbtn" id="themeToggle" title="Alternar tema" style="width:30px;height:30px;font-size:14px;">🌙</button>
       <span>Modo escuro</span>
@@ -794,7 +720,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         </div>
 
         <div class="divider-lbl">Dados</div>
-        <p class="help">Seus dados ficam salvos na sua conta (protegidos por login) e sincronizam entre dispositivos. Também mantemos uma cópia neste navegador como cache. Use "Exportar JSON" de vez em quando como backup extra.</p>
+        <p class="help">Todos os registros ficam salvos apenas neste navegador (localStorage). Exporte periodicamente para não perder o histórico.</p>
         <div class="export-row">
           <button class="btn ghost small" id="exportBtn">Exportar JSON</button>
           <button class="btn ghost small" id="importBtn">Importar JSON</button>
@@ -803,7 +729,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         </div>
 
         <div class="divider-lbl">Sobre a base de dados</div>
-        <p class="help">Valores nutricionais por 100 g de parte comestível, a partir da Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição — NEPA/UNICAMP. Alimentos personalizados adicionados por você ficam salvos na sua conta e aparecem junto nas buscas.</p>
+        <p class="help">Valores nutricionais por 100 g de parte comestível, a partir da Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição — NEPA/UNICAMP. Alimentos personalizados adicionados por você ficam salvos localmente e aparecem junto nas buscas.</p>
 
         <div class="divider-lbl">Meus alimentos personalizados</div>
         <div class="meal-chips" id="customFoodChips"></div>
@@ -904,7 +830,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
     </div>
   </div>
 
-  <footer class="foot">Dados nutricionais: TACO 4ª ed. (NEPA/UNICAMP) · Seus dados ficam salvos na sua conta</footer>
+  <footer class="foot">Dados nutricionais: TACO 4ª ed. (NEPA/UNICAMP) · Tudo salvo localmente no seu navegador</footer>
   </div>
 </div>
 
@@ -928,13 +854,12 @@ function defaultState(){
     logs:{}, customFoods:[], recentFoods:[], fixedMeals:{}
   };
 }
-function loadLocalState(){
+function loadState(){
   let s;
   try{
     const raw = localStorage.getItem(STORE_KEY);
-    s = raw ? JSON.parse(raw) : null;
-    if(!s) return null;
-  }catch(e){ console.error('erro ao carregar estado local', e); return null; }
+    s = raw ? JSON.parse(raw) : defaultState();
+  }catch(e){ console.error('erro ao carregar estado', e); s = defaultState(); }
   // migração: garantir todos os campos esperados existam
   if(!s.settings) s.settings = defaultState().settings;
   if(!s.customFoods) s.customFoods = [];
@@ -944,6 +869,8 @@ function loadLocalState(){
   if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
   if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
   if(!s.settings.macros) s.settings.macros = {...DEFAULT_MACROS};
+  // versões antigas guardavam goalMode/goalType/sex/etc direto em settings — se existir e goalKcal
+  // ainda não tiver sido calculado a partir disso, resolve para um número simples agora.
   if(s.settings.goalMode === 'calc' && s.settings.weight && s.settings.height){
     const bmr = s.settings.sex==='m'
       ? 10*s.settings.weight + 6.25*s.settings.height - 5*(s.settings.age||30) + 5
@@ -954,58 +881,12 @@ function loadLocalState(){
   if(!s.settings.goalKcal) s.settings.goalKcal = 2000;
   return s;
 }
-// preenche eventuais campos faltando num objeto de estado (usado após ler da nuvem)
-function fillStateDefaults(s){
-  if(!s.settings) s.settings = defaultState().settings;
-  if(!s.customFoods) s.customFoods = [];
-  if(!s.recentFoods) s.recentFoods = [];
-  if(!s.fixedMeals) s.fixedMeals = {};
-  if(!s.logs) s.logs = {};
-  if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
-  if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
-  if(!s.settings.macros) s.settings.macros = {...DEFAULT_MACROS};
-  if(!s.settings.goalKcal) s.settings.goalKcal = 2000;
-  return s;
-}
-let state = defaultState();
+let state = loadState();
 
 
-
-let saveTimer = null;
 function saveState(){
-  // salva local imediatamente (sensação instantânea) e agenda o envio pra nuvem
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ /* ignora, não é crítico */ }
-  if(!currentUser){ return; } // ainda não logado (não deveria acontecer, mas por segurança)
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>{ pushStateToSupabase(); }, 400);
-}
-async function pushStateToSupabase(){
-  if(!currentUser) return;
-  try{
-    const { error } = await sb
-      .from('user_data')
-      .update({ data: state, updated_at: new Date().toISOString() })
-      .eq('user_id', currentUser.id);
-    if(error){ console.error('erro ao salvar na nuvem', error); showCloudError(); }
-    else { hideCloudError(); }
-  }catch(e){
-    console.error('erro de rede ao salvar', e);
-    showCloudError();
-  }
-}
-function showCloudError(){
-  let el = document.getElementById('cloudErrorBanner');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'cloudErrorBanner';
-    el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--danger);color:#fff;text-align:center;padding:8px;font-size:12.5px;font-weight:600;z-index:400;';
-    el.textContent = '⚠ Não foi possível salvar na nuvem agora. Seus dados continuam salvos neste navegador — verifique sua conexão.';
-    document.body.prepend(el);
-  }
-}
-function hideCloudError(){
-  const el = document.getElementById('cloudErrorBanner');
-  if(el) el.remove();
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('erro ao salvar estado', e); alert('Não foi possível salvar os dados (armazenamento local indisponível).'); }
 }
 
 /* ============ base de alimentos (TACO + custom) ============ */
@@ -1043,7 +924,7 @@ function applyTheme(t){
   themeSelect.value = t;
   state.settings.theme = t; saveState();
 }
-// aplicado depois do login, quando o state real (da nuvem) estiver disponível — ver startAppUI()
+applyTheme(state.settings.theme || 'auto');
 // se estiver no modo automático, acompanha mudança de tema do sistema em tempo real
 systemThemeMedia.addEventListener('change', ()=>{ if(state.settings.theme==='auto') applyTheme('auto'); });
 // o botão de atalho sempre define um tema explícito (sai do automático)
@@ -1821,7 +1702,13 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     try{
       const data = JSON.parse(ev.target.result);
       if(!data.logs || !data.settings) throw new Error('formato inválido');
-      state = fillStateDefaults(data);
+      state = data;
+      if(!state.customFoods) state.customFoods=[];
+      if(!state.recentFoods) state.recentFoods=[];
+      if(!state.fixedMeals) state.fixedMeals={};
+      if(!state.settings.meals) state.settings.meals = DEFAULT_MEALS.slice();
+      if(!state.settings.calc) state.settings.calc = defaultState().settings.calc;
+      if(!state.settings.macros) state.settings.macros = {...DEFAULT_MACROS};
       saveState(); applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
       alert('Dados importados com sucesso.');
     }catch(err){ alert('Arquivo inválido: ' + err.message); }
@@ -1830,9 +1717,9 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   e.target.value='';
 });
 document.getElementById('clearBtn').addEventListener('click', ()=>{
-  if(confirm('Isso vai apagar TODOS os registros e configurações da sua conta. Continuar?')){
-    state = defaultState();
-    saveState();
+  if(confirm('Isso vai apagar TODOS os registros e configurações salvos neste navegador. Continuar?')){
+    localStorage.removeItem(STORE_KEY);
+    state = loadState();
     applyTheme(state.settings.theme||'light'); syncConfigForm(); refreshDateHeader(); renderLog();
   }
 });
@@ -2049,162 +1936,10 @@ document.getElementById('undoToastBtn').addEventListener('click', ()=>{
   renderLog();
 });
 
-/* ============ Supabase: conexão e autenticação ============ */
-const SUPABASE_URL = 'https://hnyfaqvykzmtdbzcqqej.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_2xV4KPeCEqtAlJVEsSPNKw_HYeDlIbb'; // Project Settings → API → anon public
-
-let sb = null;
-let currentUser = null;
-let authMode = 'login'; // 'login' | 'signup'
-
-function initSupabaseClient(){
-  if(SUPABASE_ANON_KEY === 'COLE_SUA_ANON_KEY_AQUI'){
-    showAuthMsg('Configuração pendente: cole a "anon public key" do seu projeto Supabase no código (busque por COLE_SUA_ANON_KEY_AQUI).', false);
-    document.getElementById('authSubmitBtn').disabled = true;
-    return false;
-  }
-  if(typeof window.supabase === 'undefined'){
-    showAuthMsg('Não foi possível carregar a biblioteca do Supabase. Verifique sua conexão com a internet e recarregue a página.', false);
-    return false;
-  }
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  return true;
-}
-
-function showAuthMsg(text, ok){
-  const el = document.getElementById('authMsg');
-  el.textContent = text;
-  el.style.display = 'block';
-  el.classList.toggle('ok', !!ok);
-}
-function hideAuthMsg(){
-  document.getElementById('authMsg').style.display = 'none';
-}
-
-/* alterna entre modo "entrar" e "criar conta" */
-document.getElementById('authSwitchBtn').addEventListener('click', ()=>{
-  authMode = authMode === 'login' ? 'signup' : 'login';
-  hideAuthMsg();
-  if(authMode === 'signup'){
-    document.getElementById('authTitle').textContent = 'Criar sua conta';
-    document.getElementById('authSubmitBtn').textContent = 'Criar conta';
-    document.getElementById('authSwitchText').textContent = 'Já tem conta?';
-    document.getElementById('authSwitchBtn').textContent = 'Entrar';
-  } else {
-    document.getElementById('authTitle').textContent = 'Entrar na sua conta';
-    document.getElementById('authSubmitBtn').textContent = 'Entrar';
-    document.getElementById('authSwitchText').textContent = 'Ainda não tem conta?';
-    document.getElementById('authSwitchBtn').textContent = 'Criar conta';
-  }
-});
-
-document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
-  if(!sb) return;
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  hideAuthMsg();
-  if(!email || !password){ showAuthMsg('Preencha e-mail e senha.', false); return; }
-  if(password.length < 6){ showAuthMsg('A senha precisa ter pelo menos 6 caracteres.', false); return; }
-  const btn = document.getElementById('authSubmitBtn');
-  btn.disabled = true;
-  try{
-    if(authMode === 'signup'){
-      const { data, error } = await sb.auth.signUp({ email, password });
-      if(error){ showAuthMsg(traduzErroAuth(error.message), false); return; }
-      if(data.user && !data.session){
-        showAuthMsg('Conta criada! Verifique seu e-mail para confirmar antes de entrar.', true);
-        return;
-      }
-      // se a confirmação por e-mail estiver desativada no projeto, já vem com sessão
-      if(data.session){ await onAuthReady(data.session.user); }
-    } else {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if(error){ showAuthMsg(traduzErroAuth(error.message), false); return; }
-      await onAuthReady(data.user);
-    }
-  } catch(e){
-    showAuthMsg('Erro de conexão. Verifique sua internet e tente de novo.', false);
-  } finally {
-    btn.disabled = false;
-  }
-});
-
-document.getElementById('authForgotBtn').addEventListener('click', async ()=>{
-  if(!sb) return;
-  const email = document.getElementById('authEmail').value.trim();
-  if(!email){ showAuthMsg('Digite seu e-mail no campo acima primeiro.', false); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email);
-  if(error){ showAuthMsg(traduzErroAuth(error.message), false); }
-  else { showAuthMsg('Enviamos um link de redefinição de senha pro seu e-mail.', true); }
-});
-
-function traduzErroAuth(msg){
-  const m = (msg||'').toLowerCase();
-  if(m.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
-  if(m.includes('already registered') || m.includes('already exists')) return 'Já existe uma conta com esse e-mail. Tente entrar.';
-  if(m.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar (verifique sua caixa de entrada).';
-  if(m.includes('password should be at least')) return 'A senha precisa ter pelo menos 6 caracteres.';
-  return msg;
-}
-
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  if(!sb) return;
-  await sb.auth.signOut();
-  currentUser = null;
-  state = defaultState();
-  document.getElementById('authOverlay').style.display = 'flex';
-  document.getElementById('authEmail').value = '';
-  document.getElementById('authPassword').value = '';
-});
-
-/* chamado assim que temos um usuário autenticado (login, cadastro ou sessão já existente) */
-async function onAuthReady(user){
-  currentUser = user;
-  document.getElementById('accountEmail').textContent = user.email || '';
-  document.getElementById('authOverlay').style.display = 'none';
-
-  const { data: row, error } = await sb.from('user_data').select('data').eq('user_id', user.id).single();
-  let remoteData = (!error && row) ? row.data : null;
-
-  const remoteIsEmpty = !remoteData || Object.keys(remoteData).length === 0;
-  const localBackup = loadLocalState();
-
-  if(remoteIsEmpty && localBackup){
-    const migrar = confirm('Encontramos dados salvos neste navegador (de antes do login). Importar esses dados pra sua conta agora?');
-    state = migrar ? fillStateDefaults(localBackup) : defaultState();
-    await pushStateToSupabase();
-  } else if(remoteData){
-    state = fillStateDefaults(remoteData);
-  } else {
-    state = defaultState();
-  }
-
-  startAppUI();
-}
-
-async function checkExistingSession(){
-  if(!initSupabaseClient()) return;
-  const { data: { session } } = await sb.auth.getSession();
-  if(session && session.user){
-    await onAuthReady(session.user);
-  }
-  sb.auth.onAuthStateChange((event, session)=>{
-    if(event === 'SIGNED_OUT'){
-      currentUser = null;
-      document.getElementById('authOverlay').style.display = 'flex';
-    }
-  });
-}
-
-/* liga a interface do app depois que já temos um state carregado (local ou da nuvem) */
-function startAppUI(){
-  applyTheme(state.settings.theme || 'auto');
-  refreshDateHeader();
-  syncConfigForm();
-  renderLog();
-}
-
-checkExistingSession();
+/* ============ init ============ */
+refreshDateHeader();
+syncConfigForm();
+renderLog();
 </script>
 </body>
 </html>
