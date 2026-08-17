@@ -213,6 +213,21 @@ nav.tabs{display:none;}
 .suggestions .empty{padding:14px;color:var(--ink-soft);font-size:13px;}
 .suggestions .addcustom{padding:10px 13px;color:var(--accent);font-weight:600;cursor:pointer;font-size:13px;}
 
+.community-results{margin-top:10px;}
+.community-item{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.community-item:last-child{border-bottom:none;}
+.community-item .ci-main{flex:1;min-width:180px;}
+.community-item .ci-name{font-weight:600;font-size:14px;}
+.community-item .ci-meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+.community-item .ci-import-btn{flex-shrink:0;}
+.community-item .ci-import-btn.imported{
+  background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);cursor:default;
+}
+.community-empty{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
 .section-lbl{
   font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;
   font-weight:700;display:block;margin-bottom:8px;
@@ -359,6 +374,14 @@ nav.tabs{display:none;}
 .radio-row label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:500;cursor:pointer;}
 .divider-lbl{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;
   margin:18px 0 10px;border-top:1px solid var(--line);padding-top:14px;}
+.divider-lbl .btn{text-transform:none;font-size:12px;}
+.share-btn{
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:11px;
+  padding:0 2px;opacity:.7;
+}
+.share-btn:hover{opacity:1;}
+.share-btn:disabled{opacity:.4;cursor:default;}
+.share-ok{color:var(--accent);font-weight:700;font-size:12px;margin:0 1px;}
 .help{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
 .export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
 input[type=file]{display:none;}
@@ -575,6 +598,10 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
     <button class="side-btn tab-btn" data-view="export">
       <svg class="ic" viewBox="0 0 24 24"><path d="M4 16.5v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5 5 5"/><path d="M12 4v13"/></svg>
       <span>Exportar</span>
+    </button>
+    <button class="side-btn tab-btn" data-view="community">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.87"/><path d="M17 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Comunidade</span>
     </button>
     <div class="side-spacer"></div>
     <div class="account-row">
@@ -805,7 +832,10 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <div class="divider-lbl">Sobre a base de dados</div>
         <p class="help">Valores nutricionais por 100 g de parte comestível, a partir da Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição — NEPA/UNICAMP. Alimentos personalizados adicionados por você ficam salvos na sua conta e aparecem junto nas buscas.</p>
 
-        <div class="divider-lbl">Meus alimentos personalizados</div>
+        <div class="divider-lbl" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Meus alimentos personalizados</span>
+          <button type="button" class="btn ghost small" id="shareAllFoodsBtn" style="display:none;">📤 Compartilhar todos</button>
+        </div>
         <div class="meal-chips" id="customFoodChips"></div>
       </div>
     </div>
@@ -840,6 +870,19 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <button class="btn ghost" id="genXlsxBtn">📊 Gerar Excel</button>
       </div>
       <p class="help" style="margin-top:10px;">O PDF abre a janela de impressão do navegador — escolha "Salvar como PDF" no destino. O Excel baixa direto um arquivo .xlsx com abas de resumo e detalhamento.</p>
+    </div>
+  </section>
+
+  <!-- ===================== COMUNIDADE ===================== -->
+  <section class="view" id="view-community">
+    <div class="panel" style="max-width:720px;">
+      <h2>Base de alimentos da comunidade</h2>
+      <p class="help" style="margin-bottom:14px;">Alimentos personalizados que outras pessoas cadastraram e escolheram compartilhar. Busque e importe pra sua lista pessoal — só depois disso eles aparecem na busca do dia a dia, pra não poluir a busca com coisas que você não usa.</p>
+      <div class="search-input-wrap" style="margin-bottom:4px;">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="communitySearch" placeholder="Buscar na base da comunidade…" autocomplete="off">
+      </div>
+      <div id="communityResults" class="community-results"></div>
     </div>
   </section>
 
@@ -896,6 +939,11 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <div class="field"><label>Nome da medida</label><input type="text" id="nfMeasureName" placeholder="ex: fatia, xícara, colher de sopa"></div>
         <div class="field"><label>Peso de 1 medida (g)</label><input type="number" id="nfMeasureGrams" step="0.1" placeholder="ex: 30"></div>
       </div>
+
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-top:16px;cursor:pointer;">
+        <input type="checkbox" id="nfShareCommunity" checked style="margin-top:2px;">
+        <span>Compartilhar com a comunidade — outras pessoas poderão encontrar e importar esse alimento na aba <strong>Comunidade</strong>.</span>
+      </label>
 
       <div class="modal-actions">
         <button class="btn ghost" id="cancelFoodModal" type="button">Cancelar</button>
@@ -1018,7 +1066,7 @@ function allFoods(){
 
 /* ============ navegação por abas ============ */
 const tabBtns = document.querySelectorAll('.tab-btn');
-const views = { hoje: document.getElementById('view-hoje'), semana: document.getElementById('view-semana'), calc: document.getElementById('view-calc'), config: document.getElementById('view-config'), export: document.getElementById('view-export') };
+const views = { hoje: document.getElementById('view-hoje'), semana: document.getElementById('view-semana'), calc: document.getElementById('view-calc'), config: document.getElementById('view-config'), export: document.getElementById('view-export'), community: document.getElementById('view-community') };
 tabBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
     tabBtns.forEach(b=>b.classList.remove('active'));
@@ -1028,6 +1076,7 @@ tabBtns.forEach(btn=>{
     if(btn.dataset.view==='semana') renderWeek();
     if(btn.dataset.view==='calc') syncCalcForm();
     if(btn.dataset.view==='config') syncConfigForm();
+    if(btn.dataset.view==='community') renderCommunityResults('');
   });
 });
 
@@ -1204,17 +1253,60 @@ document.getElementById('saveFoodModal').addEventListener('click', ()=>{
   foodSearch.value = '';
   selectFood(newFood);
   renderCustomFoodChips();
+
+  // compartilha com a comunidade (tabela pública), se marcado — não bloqueia o uso do app
+  if(document.getElementById('nfShareCommunity').checked){
+    shareFoodToCommunity(newFood);
+  }
 });
+/* insere (ou reenvia) um alimento personalizado na base pública da comunidade */
+async function shareFoodToCommunity(food){
+  if(!sb || !currentUser) return false;
+  try{
+    const { data, error } = await sb.from('community_foods').insert({
+      created_by: currentUser.id, name: food.n, kcal: food.kcal,
+      protein: food.p, carb: food.c, fat: food.f, fiber: food.fb||0, sodium: food.na||0,
+      category: food.cat || 'Comunidade',
+      measure_name: food.measureName || null,
+      measure_grams: food.measureGrams || null,
+    }).select().single();
+    if(error){ console.error('erro ao compartilhar com a comunidade', error); return false; }
+    if(data && data.id){ food.communityId = data.id; saveState(); }
+    return true;
+  } catch(e){ console.error('erro de rede ao compartilhar', e); return false; }
+}
+
 function renderCustomFoodChips(){
   const box = document.getElementById('customFoodChips');
   const list = state.customFoods || [];
   if(list.length===0){
     box.innerHTML = `<span style="color:var(--ink-soft);font-size:12.5px;">Nenhum alimento personalizado cadastrado ainda.</span>`;
+    document.getElementById('shareAllFoodsBtn').style.display = 'none';
     return;
   }
+  const pendentes = list.filter(f=>!f.communityId).length;
+  const shareAllBtn = document.getElementById('shareAllFoodsBtn');
+  shareAllBtn.style.display = pendentes > 0 ? 'inline-block' : 'none';
+  shareAllBtn.textContent = `📤 Compartilhar todos (${pendentes} pendente${pendentes===1?'':'s'})`;
+
   box.innerHTML = list.map((f,i)=>`
-    <span class="meal-chip" title="${f.kcal} kcal/100g">${f.n}<button data-i="${i}" title="Remover">✕</button></span>`).join('');
-  box.querySelectorAll('button').forEach(b=>{
+    <span class="meal-chip" title="${f.kcal} kcal/100g">
+      ${f.n}
+      ${f.communityId
+        ? `<span class="share-ok" title="Já compartilhado com a comunidade">✓</span>`
+        : `<button class="share-btn" data-i="${i}" title="Compartilhar com a comunidade">📤</button>`}
+      <button data-i="${i}" title="Remover">✕</button>
+    </span>`).join('');
+
+  box.querySelectorAll('.share-btn').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      b.disabled = true; b.textContent = '…';
+      const ok = await shareFoodToCommunity(list[parseInt(b.dataset.i)]);
+      if(!ok) alert('Não foi possível compartilhar agora. Verifique sua conexão e tente de novo.');
+      renderCustomFoodChips();
+    });
+  });
+  box.querySelectorAll('button:not(.share-btn)').forEach(b=>{
     b.addEventListener('click', ()=>{
       if(confirm(`Remover "${list[b.dataset.i].n}" dos alimentos personalizados? Itens já lançados em dias anteriores continuam no histórico.`)){
         state.customFoods.splice(parseInt(b.dataset.i),1);
@@ -1222,6 +1314,85 @@ function renderCustomFoodChips(){
       }
     });
   });
+}
+
+document.getElementById('shareAllFoodsBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('shareAllFoodsBtn');
+  const pendentes = (state.customFoods||[]).filter(f=>!f.communityId);
+  if(pendentes.length===0) return;
+  btn.disabled = true;
+  const textoOriginal = btn.textContent;
+  let ok=0, falhou=0;
+  for(const food of pendentes){
+    btn.textContent = `Compartilhando… (${ok+falhou+1}/${pendentes.length})`;
+    const sucesso = await shareFoodToCommunity(food);
+    if(sucesso) ok++; else falhou++;
+  }
+  btn.disabled = false;
+  renderCustomFoodChips();
+  alert(falhou===0
+    ? `${ok} alimento(s) compartilhado(s) com sucesso!`
+    : `${ok} compartilhado(s), ${falhou} falharam (tente de novo pra esses).`);
+});
+
+/* ============ aba Comunidade: buscar e importar alimentos compartilhados ============ */
+const communitySearch = document.getElementById('communitySearch');
+let communitySearchTimer = null;
+communitySearch.addEventListener('input', (e)=>{
+  clearTimeout(communitySearchTimer);
+  const q = e.target.value;
+  communitySearchTimer = setTimeout(()=> renderCommunityResults(q), 300);
+});
+
+async function renderCommunityResults(query){
+  const box = document.getElementById('communityResults');
+  if(!sb || !currentUser){ box.innerHTML = `<div class="community-empty">Faça login para ver a base da comunidade.</div>`; return; }
+  box.innerHTML = `<div class="community-empty">Buscando…</div>`;
+  try{
+    let req = sb.from('community_foods').select('*').order('created_at', { ascending:false }).limit(40);
+    if(query && query.trim()){ req = req.ilike('name', `%${query.trim()}%`); }
+    const { data, error } = await req;
+    if(error){ box.innerHTML = `<div class="community-empty">Não foi possível carregar a base da comunidade agora.</div>`; return; }
+    if(!data || data.length===0){
+      box.innerHTML = `<div class="community-empty">${query ? `Nenhum resultado para "${query}".` : 'Ainda não há alimentos compartilhados pela comunidade.'}</div>`;
+      return;
+    }
+    const importedIds = new Set((state.customFoods||[]).map(f=>f.communityId).filter(Boolean));
+    box.innerHTML = data.map(row=>{
+      const already = importedIds.has(row.id);
+      const measureTxt = row.measure_name && row.measure_grams ? ` · 1 ${row.measure_name} = ${row.measure_grams}g` : '';
+      return `<div class="community-item">
+        <div class="ci-main">
+          <div class="ci-name">${row.name}</div>
+          <div class="ci-meta">${row.kcal} kcal/100g · P ${row.protein}g · C ${row.carb}g · G ${row.fat}g${measureTxt}</div>
+        </div>
+        <button type="button" class="btn ${already?'ghost':'accent'} small ci-import-btn${already?' imported':''}" data-id="${row.id}" ${already?'disabled':''}>${already?'✓ Importado':'Importar'}</button>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('.ci-import-btn:not(.imported)').forEach(btn=>{
+      btn.addEventListener('click', ()=> importCommunityFood(data.find(r=>r.id===btn.dataset.id), btn));
+    });
+  } catch(e){
+    box.innerHTML = `<div class="community-empty">Erro de conexão ao buscar a base da comunidade.</div>`;
+  }
+}
+
+function importCommunityFood(row, btn){
+  if(!row) return;
+  const newFood = {
+    id: 'custom_'+Date.now(), n: row.name, kcal: row.kcal,
+    p: row.protein, c: row.carb, f: row.fat, fb: row.fiber, na: row.sodium,
+    cat: row.category || 'Comunidade',
+    communityId: row.id,
+  };
+  if(row.measure_name && row.measure_grams){
+    newFood.measureName = row.measure_name;
+    newFood.measureGrams = row.measure_grams;
+  }
+  state.customFoods.push(newFood);
+  saveState();
+  renderCustomFoodChips();
+  if(btn){ btn.textContent = '✓ Importado'; btn.classList.add('imported'); btn.classList.replace('accent','ghost'); btn.disabled = true; }
 }
 
 /* seleciona o alimento (ainda não salva) e mostra a barra pra ajustar quantidade antes de confirmar */
