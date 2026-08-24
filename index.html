@@ -305,10 +305,11 @@ nav.tabs{display:none;}
 .li-kcal{font-weight:700;font-size:14px;min-width:64px;text-align:right;}
 .li-macro{color:var(--ink-soft);font-size:13px;white-space:nowrap;}
 .rm-btn{
-  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:17px;
-  padding:2px 8px;flex-shrink:0;letter-spacing:1px;border-radius:var(--radius-sm);
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+  padding:7px 8px;flex-shrink:0;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
 }
-.rm-btn:hover{color:var(--ink);background:var(--bg-soft);}
+.rm-btn:hover{color:var(--danger);background:var(--danger-soft);}
 .empty-state{padding:30px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
 
 @media (max-width:480px){
@@ -1782,7 +1783,7 @@ function renderFixedMeals(){
         <span class="li-qty">${items.length} ${items.length===1?'item':'itens'} · ${kcal} kcal</span>
       </div>
       <button type="button" class="btn accent small" data-apply="${name}">Aplicar hoje</button>
-      <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa">⋮</button>
+      <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div>`;
   }).join('');
   document.getElementById('fixedMealsList').querySelectorAll('[data-apply]').forEach(b=>{
@@ -1866,7 +1867,7 @@ function renderLog(){
                 <span class="li-macro"><b>${it.c}</b>C</span>
                 <span class="li-macro"><b>${it.f}</b>G</span>
               </div>
-              <button class="rm-btn" data-i="${it._i}" title="Remover">⋮</button>
+              <button class="rm-btn" data-i="${it._i}" title="Remover"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>`).join('')}
         </div>
       </div>`;
@@ -2450,6 +2451,12 @@ document.getElementById('authSwitchBtn').addEventListener('click', ()=>{
   }
 });
 
+document.getElementById('authEmail').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); document.getElementById('authPassword').focus(); }
+});
+document.getElementById('authPassword').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); document.getElementById('authSubmitBtn').click(); }
+});
 document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
   if(!sb) return;
   const email = document.getElementById('authEmail').value.trim();
