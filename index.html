@@ -438,6 +438,10 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .meal-head .chevron{transition:transform .2s ease;color:var(--ink-soft);}
 .meal-block.collapsed .chevron{transform:rotate(180deg);}
 .meal-block.collapsed .log-list{display:none;}
+.meal-block.collapsed .fixed-meals-list{display:none;}
+.fixed-meals-list{margin-top:12px;border-top:1px solid var(--line);}
+.fixed-meal-row{cursor:default;gap:10px;}
+.fixed-meal-row .li-main{cursor:default;}
 .log-list{margin-top:12px;border-top:1px solid var(--line);}
 .pin-btn{
   border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:13px;
@@ -714,7 +718,15 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
               Repetir alimentos de ontem
             </button>
           </div>
-          <div class="fixed-meals" id="fixedMealsBar" style="display:none;"></div>
+          <div class="meal-block fixed-meals-block" id="fixedMealsBlock" style="display:none;">
+            <div class="meal-head" id="fixedMealsToggle">
+              <span class="mh-name"><span class="mh-dot" style="border-color:var(--amber);"></span>Refeições fixas</span>
+              <span class="mh-sub"><span id="fixedMealsCount">0</span> salvas
+                <svg class="ic chevron" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </div>
+            <div class="fixed-meals-list" id="fixedMealsList"></div>
+          </div>
           <div class="search-box">
             <div class="recent-foods" id="recentFoods" style="display:none;"></div>
             <div class="search-row">
@@ -989,6 +1001,25 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
       <div class="modal-actions">
         <button class="btn ghost" id="cancelRepeatModal" type="button">Cancelar</button>
         <button class="btn accent" id="confirmRepeatModal" type="button">Importar selecionados</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: FIXAR REFEIÇÃO (NOMEAR) ===================== -->
+  <div class="modal-overlay" id="pinMealModalOverlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Fixar refeição</h3>
+        <button class="iconbtn" id="closePinMealModal" type="button">×</button>
+      </div>
+      <p class="help" id="pinMealSub"></p>
+      <div class="field">
+        <label>Nome da refeição fixa</label>
+        <input type="text" id="pinMealNameInput" placeholder="ex: Almoço dia de treino">
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelPinMeal" type="button">Cancelar</button>
+        <button class="btn accent" id="confirmPinMeal" type="button">Salvar</button>
       </div>
     </div>
   </div>
@@ -1681,19 +1712,43 @@ document.getElementById('confirmRepeatModal').addEventListener('click', ()=>{
 });
 
 /* ============ refeições fixas (fixar/reaplicar quando quiser) ============ */
-function pinMeal(mealName){
+let pendingPinItems = null;
+
+function openPinMealModal(mealName){
   const key = todayStr(currentDate);
   const items = (state.logs[key] || []).filter(it => (it.meal||'') === mealName || (mealName==='Sem refeição' && !it.meal));
   if(items.length===0){ alert('Essa refeição está vazia, não há o que fixar.'); return; }
-  if(state.fixedMeals[mealName] && !confirm(`Já existe uma refeição fixa "${mealName}". Substituir pelos itens de hoje?`)) return;
-  state.fixedMeals[mealName] = items.map(it => ({
+  pendingPinItems = items.map(it => ({
     foodId: it.foodId, name: it.name, grams: it.grams, meal: it.meal,
     kcal: it.kcal, p: it.p, c: it.c, f: it.f, fb: it.fb, na: it.na,
   }));
+  document.getElementById('pinMealSub').textContent =
+    `Dê um nome pra essa combinação de alimentos. Assim dá pra salvar variações diferentes (ex: "${mealName} dia de treino", "${mealName} fim de semana") em vez de sobrescrever sempre a mesma.`;
+  const input = document.getElementById('pinMealNameInput');
+  input.value = mealName;
+  document.getElementById('pinMealModalOverlay').style.display = 'flex';
+  input.focus(); input.select();
+}
+function closePinMealModal(){
+  document.getElementById('pinMealModalOverlay').style.display = 'none';
+  pendingPinItems = null;
+}
+document.getElementById('closePinMealModal').addEventListener('click', closePinMealModal);
+document.getElementById('cancelPinMeal').addEventListener('click', closePinMealModal);
+document.getElementById('pinMealModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='pinMealModalOverlay') closePinMealModal(); });
+document.getElementById('pinMealNameInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('confirmPinMeal').click(); } });
+document.getElementById('confirmPinMeal').addEventListener('click', ()=>{
+  const name = document.getElementById('pinMealNameInput').value.trim();
+  if(!name){ alert('Digite um nome pra essa refeição fixa.'); return; }
+  if(!pendingPinItems) { closePinMealModal(); return; }
+  if(state.fixedMeals[name] && !confirm(`Já existe uma refeição fixa "${name}". Substituir pelos itens de agora?`)) return;
+  state.fixedMeals[name] = pendingPinItems;
   saveState();
+  closePinMealModal();
   renderFixedMeals();
   renderLog();
-}
+});
+
 function unpinMeal(mealName){
   delete state.fixedMeals[mealName];
   saveState();
@@ -1709,20 +1764,35 @@ function applyFixedMeal(mealName){
   saveState();
   renderLog();
 }
+document.getElementById('fixedMealsToggle').addEventListener('click', ()=>{
+  document.getElementById('fixedMealsBlock').classList.toggle('collapsed');
+});
 function renderFixedMeals(){
-  const box = document.getElementById('fixedMealsBar');
+  const block = document.getElementById('fixedMealsBlock');
   const names = Object.keys(state.fixedMeals || {});
-  if(names.length===0){ box.style.display='none'; return; }
-  box.innerHTML = `<span class="fm-lbl">Refeições fixas — clique pra aplicar hoje</span>` + names.map(name=>`
-    <span class="fixed-meal-chip">
-      <button type="button" class="apply" data-name="${name}" title="Aplicar hoje">${name}</button>
-      <button type="button" class="unpin" data-name="${name}" title="Desfixar">✕</button>
-    </span>`).join('');
-  box.style.display='flex';
-  box.querySelectorAll('.apply').forEach(b=> b.addEventListener('click', ()=> applyFixedMeal(b.dataset.name)));
-  box.querySelectorAll('.unpin').forEach(b=> b.addEventListener('click', ()=> {
-    if(confirm(`Remover a refeição fixa "${b.dataset.name}"?`)) unpinMeal(b.dataset.name);
-  }));
+  if(names.length===0){ block.style.display='none'; return; }
+  block.style.display='block';
+  document.getElementById('fixedMealsCount').textContent = names.length;
+  document.getElementById('fixedMealsList').innerHTML = names.map(name=>{
+    const items = state.fixedMeals[name];
+    const kcal = Math.round(items.reduce((a,it)=>a+it.kcal,0));
+    return `<div class="log-item fixed-meal-row">
+      <div class="li-main">
+        <span class="li-name">${name}</span>
+        <span class="li-qty">${items.length} ${items.length===1?'item':'itens'} · ${kcal} kcal</span>
+      </div>
+      <button type="button" class="btn accent small" data-apply="${name}">Aplicar hoje</button>
+      <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa">⋮</button>
+    </div>`;
+  }).join('');
+  document.getElementById('fixedMealsList').querySelectorAll('[data-apply]').forEach(b=>{
+    b.addEventListener('click', ()=> applyFixedMeal(b.dataset.apply));
+  });
+  document.getElementById('fixedMealsList').querySelectorAll('[data-unpin]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(confirm(`Remover a refeição fixa "${b.dataset.unpin}"?`)) unpinMeal(b.dataset.unpin);
+    });
+  });
 }
 
 
@@ -1804,7 +1874,7 @@ function renderLog(){
     mealsContainer.querySelectorAll('.pin-btn').forEach(b=>{
       b.addEventListener('click', (e)=>{
         e.stopPropagation();
-        pinMeal(b.dataset.meal);
+        openPinMealModal(b.dataset.meal);
       });
     });
     mealsContainer.querySelectorAll('.meal-head').forEach(h=>{
