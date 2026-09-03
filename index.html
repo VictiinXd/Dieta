@@ -182,6 +182,7 @@ nav.tabs{display:none;}
 @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
 .grid-today{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:start;}
+.grid-today > div{min-width:0;}
 @media (max-width:860px){.grid-today{grid-template-columns:1fr;}}
 
 .panel{
@@ -223,6 +224,7 @@ nav.tabs{display:none;}
 }
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 .btn.accent{background:var(--accent);color:#fff;}
+.btn.accent.applied{background:var(--accent-strong);}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong);}
 .btn.pill{border-radius:var(--radius-pill);}
 .btn.small{padding:6px 12px;font-size:12px;}
@@ -432,17 +434,27 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .meal-block:last-child{margin-bottom:0;}
 .meal-head{
   display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;
+  gap:10px;
 }
-.meal-head .mh-name{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:9px;}
+.meal-head .mh-name{
+  font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:9px;
+  flex:1 1 auto;min-width:0;
+}
+.meal-head .mh-name span:not(.mh-dot){display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .meal-head .mh-name .mh-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);flex-shrink:0;}
-.meal-head .mh-sub{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;font-weight:600;}
-.meal-head .chevron{transition:transform .2s ease;color:var(--ink-soft);}
+.meal-head .mh-sub{
+  font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;font-weight:600;
+  flex-shrink:0;white-space:nowrap;
+}
+.meal-head .chevron{transition:transform .2s ease;color:var(--ink-soft);flex-shrink:0;}
 .meal-block.collapsed .chevron{transform:rotate(180deg);}
 .meal-block.collapsed .log-list{display:none;}
 .meal-block.collapsed .fixed-meals-list{display:none;}
 .fixed-meals-list{margin-top:12px;border-top:1px solid var(--line);}
-.fixed-meal-row{cursor:default;gap:10px;}
-.fixed-meal-row .li-main{cursor:default;}
+.fixed-meal-row{cursor:default;gap:10px;flex-wrap:nowrap;}
+.fixed-meal-row .li-main{cursor:default;min-width:0;flex-shrink:1;}
+.fixed-meal-row .li-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fixed-meal-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;}
 .log-list{margin-top:12px;border-top:1px solid var(--line);}
 .pin-btn{
   border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:13px;
@@ -559,6 +571,10 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
 }
 [data-theme="dark"] .toast{background:#EDEFEA;color:#14181A;}
 .toast .link-btn{font-weight:800;text-decoration:none;white-space:nowrap;}
+.toast.idle-warning{
+  top:16px;bottom:auto;background:var(--amber);color:#1A1200;
+}
+.toast.idle-warning .link-btn{color:#1A1200 !important;}
 /* ======================================================
    MOBILE — reorganiza navegação, cabeçalho e formulários
    (bloco colocado no fim do CSS de propósito, pra vencer a
@@ -721,7 +737,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
           </div>
           <div class="meal-block fixed-meals-block" id="fixedMealsBlock" style="display:none;">
             <div class="meal-head" id="fixedMealsToggle">
-              <span class="mh-name"><span class="mh-dot" style="border-color:var(--amber);"></span>Refeições fixas</span>
+              <span class="mh-name"><span class="mh-dot" style="border-color:var(--amber);"></span><span>Refeições fixas</span></span>
               <span class="mh-sub"><span id="fixedMealsCount">0</span> salvas
                 <svg class="ic chevron" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M6 9l6 6 6-6"/></svg>
               </span>
@@ -916,6 +932,20 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
           <select id="themeSelect"><option value="light">Claro</option><option value="dark">Escuro</option><option value="auto">Automático (sistema)</option></select>
         </div>
 
+        <div class="divider-lbl">Segurança</div>
+        <div class="field">
+          <label>Desconectar automaticamente por inatividade</label>
+          <select id="autoLogoutSelect">
+            <option value="0">Nunca</option>
+            <option value="5">Após 5 minutos</option>
+            <option value="15">Após 15 minutos</option>
+            <option value="30">Após 30 minutos</option>
+            <option value="60">Após 1 hora</option>
+            <option value="120">Após 2 horas</option>
+          </select>
+        </div>
+        <p class="help">Vale só para este navegador/dispositivo. Você recebe um aviso 1 minuto antes de ser desconectado, com a opção de continuar.</p>
+
         <div class="divider-lbl">Dados</div>
         <p class="help">Seus dados ficam salvos na sua conta (protegidos por login) e sincronizam entre dispositivos. Também mantemos uma cópia neste navegador como cache. Use "Exportar JSON" de vez em quando como backup extra.</p>
         <div class="export-row">
@@ -988,6 +1018,11 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
   <div class="toast" id="undoToast" style="display:none;">
     <span id="undoToastText"></span>
     <button class="link-btn" id="undoToastBtn" type="button" style="color:#fff;">Desfazer</button>
+  </div>
+
+  <div class="toast idle-warning" id="idleWarningBanner" style="display:none;">
+    <span>⏱ Você vai ser desconectado por inatividade em <b id="idleCountdown">60</b>s</span>
+    <button class="link-btn" id="staySignedInBtn" type="button" style="color:#fff;">Continuar conectado</button>
   </div>
 
   <!-- ===================== MODAL: REPETIR ALIMENTOS DE ONTEM ===================== -->
@@ -1756,6 +1791,8 @@ function unpinMeal(mealName){
   renderFixedMeals();
   renderLog();
 }
+let justAppliedMeal = null;
+let justAppliedTimer = null;
 function applyFixedMeal(mealName){
   const template = state.fixedMeals[mealName];
   if(!template) return;
@@ -1763,6 +1800,9 @@ function applyFixedMeal(mealName){
   if(!state.logs[key]) state.logs[key] = [];
   template.forEach(it=> state.logs[key].push({...it}));
   saveState();
+  justAppliedMeal = mealName;
+  clearTimeout(justAppliedTimer);
+  justAppliedTimer = setTimeout(()=>{ justAppliedMeal = null; renderFixedMeals(); }, 1600);
   renderLog();
 }
 document.getElementById('fixedMealsToggle').addEventListener('click', ()=>{
@@ -1777,13 +1817,16 @@ function renderFixedMeals(){
   document.getElementById('fixedMealsList').innerHTML = names.map(name=>{
     const items = state.fixedMeals[name];
     const kcal = Math.round(items.reduce((a,it)=>a+it.kcal,0));
+    const justApplied = name === justAppliedMeal;
     return `<div class="log-item fixed-meal-row">
       <div class="li-main">
         <span class="li-name">${name}</span>
         <span class="li-qty">${items.length} ${items.length===1?'item':'itens'} · ${kcal} kcal</span>
       </div>
-      <button type="button" class="btn accent small" data-apply="${name}">Aplicar hoje</button>
-      <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      <div class="fixed-meal-actions">
+        <button type="button" class="btn accent small${justApplied?' applied':''}" data-apply="${name}">${justApplied?'Adicionado ✓':'Aplicar hoje'}</button>
+        <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      </div>
     </div>`;
   }).join('');
   document.getElementById('fixedMealsList').querySelectorAll('[data-apply]').forEach(b=>{
@@ -1848,7 +1891,7 @@ function renderLog(){
       const isPinned = !!state.fixedMeals[g.name];
       return `<div class="meal-block">
         <div class="meal-head" data-meal-toggle="${g.name}">
-          <span class="mh-name"><span class="mh-dot"></span>${g.name}</span>
+          <span class="mh-name"><span class="mh-dot"></span><span>${g.name}</span></span>
           <span class="mh-sub">${Math.round(sub)} kcal
             <button class="pin-btn${isPinned?' pinned':''}" data-meal="${g.name}" title="${isPinned?'Atualizar refeição fixa':'Fixar esta refeição'}">📌</button>
             <svg class="ic chevron" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M6 9l6 6 6-6"/></svg>
@@ -2506,14 +2549,68 @@ function traduzErroAuth(msg){
   return msg;
 }
 
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  if(!sb) return;
-  await sb.auth.signOut();
+async function performLogout(reason){
+  stopInactivityTracking();
+  if(sb){ try{ await sb.auth.signOut(); }catch(e){ /* ignora, já vamos limpar a UI de qualquer forma */ } }
   currentUser = null;
   state = defaultState();
   document.getElementById('authOverlay').style.display = 'flex';
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
+  if(reason){ showAuthMsg(reason, false); } else { hideAuthMsg(); }
+}
+document.getElementById('logoutBtn').addEventListener('click', ()=> performLogout());
+
+/* ============ logout automático por inatividade ============ */
+const AUTOLOGOUT_KEY = 'balanco_autologout_minutes';
+const IDLE_WARNING_SECONDS = 60;
+let autoLogoutMinutes = parseInt(localStorage.getItem(AUTOLOGOUT_KEY), 10) || 0; // 0 = nunca
+let idleTimer = null, idleWarningTimer = null, idleCountdownTimer = null;
+
+function getAutoLogoutMs(){ return autoLogoutMinutes * 60 * 1000; }
+
+function resetInactivityTimer(){
+  clearTimeout(idleTimer); clearTimeout(idleWarningTimer); clearInterval(idleCountdownTimer);
+  hideIdleWarning();
+  if(!currentUser || !autoLogoutMinutes) return;
+  const totalMs = getAutoLogoutMs();
+  const warnMs = Math.max(totalMs - IDLE_WARNING_SECONDS*1000, Math.floor(totalMs/2));
+  idleWarningTimer = setTimeout(showIdleWarning, warnMs);
+  idleTimer = setTimeout(()=> performLogout('Sessão encerrada por inatividade. Entre novamente.'), totalMs);
+}
+function showIdleWarning(){
+  const totalMs = getAutoLogoutMs();
+  let secondsLeft = Math.round((totalMs - Math.max(totalMs - IDLE_WARNING_SECONDS*1000, Math.floor(totalMs/2))) / 1000);
+  document.getElementById('idleCountdown').textContent = secondsLeft;
+  document.getElementById('idleWarningBanner').style.display = 'flex';
+  clearInterval(idleCountdownTimer);
+  idleCountdownTimer = setInterval(()=>{
+    secondsLeft--;
+    if(secondsLeft <= 0){ clearInterval(idleCountdownTimer); return; }
+    document.getElementById('idleCountdown').textContent = secondsLeft;
+  }, 1000);
+}
+function hideIdleWarning(){
+  document.getElementById('idleWarningBanner').style.display = 'none';
+  clearInterval(idleCountdownTimer);
+}
+function startInactivityTracking(){
+  resetInactivityTimer();
+}
+function stopInactivityTracking(){
+  clearTimeout(idleTimer); clearTimeout(idleWarningTimer); clearInterval(idleCountdownTimer);
+  hideIdleWarning();
+}
+document.getElementById('staySignedInBtn').addEventListener('click', resetInactivityTimer);
+['mousemove','keydown','click','touchstart','scroll','wheel'].forEach(evt=>{
+  document.addEventListener(evt, ()=>{ if(currentUser && autoLogoutMinutes) resetInactivityTimer(); }, {passive:true});
+});
+const autoLogoutSelect = document.getElementById('autoLogoutSelect');
+autoLogoutSelect.value = String(autoLogoutMinutes);
+autoLogoutSelect.addEventListener('change', ()=>{
+  autoLogoutMinutes = parseInt(autoLogoutSelect.value, 10) || 0;
+  localStorage.setItem(AUTOLOGOUT_KEY, String(autoLogoutMinutes));
+  if(currentUser) resetInactivityTimer();
 });
 
 /* chamado assim que temos um usuário autenticado (login, cadastro ou sessão já existente) */
@@ -2539,6 +2636,7 @@ async function onAuthReady(user){
   }
 
   startAppUI();
+  startInactivityTracking();
 }
 
 async function checkExistingSession(){
@@ -2550,6 +2648,7 @@ async function checkExistingSession(){
   sb.auth.onAuthStateChange((event, session)=>{
     if(event === 'SIGNED_OUT'){
       currentUser = null;
+      stopInactivityTracking();
       document.getElementById('authOverlay').style.display = 'flex';
     }
   });
