@@ -451,10 +451,19 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
 .meal-block.collapsed .log-list{display:none;}
 .meal-block.collapsed .fixed-meals-list{display:none;}
 .fixed-meals-list{margin-top:12px;border-top:1px solid var(--line);}
-.fixed-meal-row{cursor:default;gap:10px;flex-wrap:nowrap;}
+.fixed-meal-row{cursor:default;gap:10px;flex-wrap:wrap;}
 .fixed-meal-row .li-main{cursor:default;min-width:0;flex-shrink:1;}
 .fixed-meal-row .li-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fixed-meal-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;}
+.fixed-meal-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap;margin-left:auto;}
+.fm-meal-sel{
+  max-width:140px;font:inherit;font-size:12px;font-weight:600;color:var(--ink);
+  background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:6px 8px;
+}
+.mv-btn{
+  border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:12px;
+  padding:2px 5px;line-height:1;opacity:.6;transition:.15s;
+}
+.mv-btn:hover{opacity:1;color:var(--accent);}
 .log-list{margin-top:12px;border-top:1px solid var(--line);}
 .pin-btn{
   border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:13px;
@@ -906,15 +915,15 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <button class="btn accent" id="saveGoalBtn">Salvar meta</button>
         <div class="help">Prefere calcular a partir do seu peso, altura e objetivo? Use a aba <strong>Calculadora</strong> — o resultado de lá pode ser aplicado direto aqui como sua meta diária.</div>
 
-        <div class="divider-lbl">Distribuição de macros (%)</div>
-        <p class="help">Define a meta em gramas de proteína, carboidrato e gordura mostrada no resumo do dia. O ideal é somar 100%.</p>
+        <div class="divider-lbl">Metas de macros (g)</div>
+        <p class="help">Defina direto em gramas a meta diária de proteína, carboidrato e gordura.</p>
         <div class="field-row">
-          <div class="field"><label>Proteína %</label><input type="number" id="macroP" min="0" max="100" step="1"></div>
-          <div class="field"><label>Carboidrato %</label><input type="number" id="macroC" min="0" max="100" step="1"></div>
-          <div class="field"><label>Gordura %</label><input type="number" id="macroF" min="0" max="100" step="1"></div>
+          <div class="field"><label>Proteína (g)</label><input type="number" id="macroP" min="0" max="100" step="1"></div>
+          <div class="field"><label>Carboidrato (g)</label><input type="number" id="macroC" min="0" max="100" step="1"></div>
+          <div class="field"><label>Gordura (g)</label><input type="number" id="macroF" min="0" max="100" step="1"></div>
         </div>
         <div class="help" id="macroSumHelp"></div>
-        <button class="btn ghost small" id="saveMacrosBtn">Salvar distribuição</button>
+        <button class="btn ghost small" id="saveMacrosBtn">Salvar metas</button>
 
         <div class="divider-lbl">Refeições</div>
         <p class="help">Defina quais refeições aparecem para escolher ao adicionar um alimento. Você decide quantas e quais usar.</p>
@@ -1145,13 +1154,26 @@ const todayStr = (d)=> {
   return `${y}-${m}-${day}`;
 };
 const DEFAULT_MEALS = ['Café da manhã','Almoço','Lanche da tarde','Jantar'];
-const DEFAULT_MACROS = { p:30, c:40, f:30 }; // % das calorias da meta
+const DEFAULT_MACROS = { p:150, c:200, f:67 }; // meta diária em GRAMAS
 function defaultState(){
   return {
-    settings:{ goalKcal:2000, theme:'auto', meals: DEFAULT_MEALS.slice(), macros: {...DEFAULT_MACROS},
+    settings:{ goalKcal:2000, theme:'auto', meals: DEFAULT_MEALS.slice(), macros: {...DEFAULT_MACROS}, macroMode:'g',
       calc:{ sex:'f', age:30, weight:65, height:165, activity:1.375, objetivo:0 } },
     logs:{}, customFoods:[], recentFoods:[], fixedMeals:{}
   };
+}
+// migra metas de macros antigas (%) para gramas, uma única vez
+function migrateMacros(s){
+  const st = s.settings;
+  if(st.macroMode === 'g' && st.macros) return;
+  if(!st.macros){ st.macros = {...DEFAULT_MACROS}; st.macroMode = 'g'; return; }
+  const old = st.macros, kcal = st.goalKcal || 2000;
+  st.macros = {
+    p: Math.round(kcal*(old.p||0)/100/4),
+    c: Math.round(kcal*(old.c||0)/100/4),
+    f: Math.round(kcal*(old.f||0)/100/9),
+  };
+  st.macroMode = 'g';
 }
 function loadLocalState(){
   let s;
@@ -1168,7 +1190,6 @@ function loadLocalState(){
   if(!s.logs) s.logs = {};
   if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
   if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
-  if(!s.settings.macros) s.settings.macros = {...DEFAULT_MACROS};
   if(s.settings.goalMode === 'calc' && s.settings.weight && s.settings.height){
     const bmr = s.settings.sex==='m'
       ? 10*s.settings.weight + 6.25*s.settings.height - 5*(s.settings.age||30) + 5
@@ -1177,6 +1198,7 @@ function loadLocalState(){
   }
   delete s.settings.goalMode;
   if(!s.settings.goalKcal) s.settings.goalKcal = 2000;
+  migrateMacros(s);
   return s;
 }
 // preenche eventuais campos faltando num objeto de estado (usado após ler da nuvem)
@@ -1188,8 +1210,8 @@ function fillStateDefaults(s){
   if(!s.logs) s.logs = {};
   if(!s.settings.meals) s.settings.meals = DEFAULT_MEALS.slice();
   if(!s.settings.calc) s.settings.calc = defaultState().settings.calc;
-  if(!s.settings.macros) s.settings.macros = {...DEFAULT_MACROS};
   if(!s.settings.goalKcal) s.settings.goalKcal = 2000;
+  migrateMacros(s);
   return s;
 }
 let state = defaultState();
@@ -1792,13 +1814,16 @@ function unpinMeal(mealName){
   renderLog();
 }
 let justAppliedMeal = null;
+const fixedMealTarget = {};
 let justAppliedTimer = null;
 function applyFixedMeal(mealName){
   const template = state.fixedMeals[mealName];
   if(!template) return;
   const key = todayStr(currentDate);
   if(!state.logs[key]) state.logs[key] = [];
-  template.forEach(it=> state.logs[key].push({...it}));
+  const target = fixedMealTarget[mealName] ?? mealSelect.value;
+  const meal = target === '__SEM__' ? '' : target;
+  template.forEach(it=> state.logs[key].push({...it, meal}));
   saveState();
   justAppliedMeal = mealName;
   clearTimeout(justAppliedTimer);
@@ -1814,8 +1839,12 @@ function renderFixedMeals(){
   if(names.length===0){ block.style.display='none'; return; }
   block.style.display='block';
   document.getElementById('fixedMealsCount').textContent = names.length;
+  names.forEach(n=>{ if(!(n in fixedMealTarget)) fixedMealTarget[n] = mealSelect.value; });
   document.getElementById('fixedMealsList').innerHTML = names.map(name=>{
     const items = state.fixedMeals[name];
+    const cur = fixedMealTarget[name];
+    const mealOptions = (state.settings.meals||[]).concat(['__SEM__']).map(m=>
+      `<option value="${m}"${m===cur?' selected':''}>${m==='__SEM__'?'Sem refeição':m}</option>`).join('');
     const kcal = Math.round(items.reduce((a,it)=>a+it.kcal,0));
     const justApplied = name === justAppliedMeal;
     return `<div class="log-item fixed-meal-row">
@@ -1824,11 +1853,15 @@ function renderFixedMeals(){
         <span class="li-qty">${items.length} ${items.length===1?'item':'itens'} · ${kcal} kcal</span>
       </div>
       <div class="fixed-meal-actions">
+        <select class="fm-meal-sel" data-sel="${name}" title="Em qual refeição adicionar">${mealOptions}</select>
         <button type="button" class="btn accent small${justApplied?' applied':''}" data-apply="${name}">${justApplied?'Adicionado ✓':'Aplicar hoje'}</button>
         <button type="button" class="rm-btn" data-unpin="${name}" title="Remover refeição fixa"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
       </div>
     </div>`;
   }).join('');
+  document.getElementById('fixedMealsList').querySelectorAll('[data-sel]').forEach(sel=>{
+    sel.addEventListener('change', ()=>{ fixedMealTarget[sel.dataset.sel] = sel.value; });
+  });
   document.getElementById('fixedMealsList').querySelectorAll('[data-apply]').forEach(b=>{
     b.addEventListener('click', ()=> applyFixedMeal(b.dataset.apply));
   });
@@ -1851,14 +1884,10 @@ function setMacroBar(id, consumed, goalG){
   el.style.width = Math.min(pct,100)+'%';
   el.classList.toggle('over', pct>100);
 }
-// converte a distribuição percentual de macros (Config) em gramas-meta, dada a meta calórica
-function getMacroGoalsGrams(goalKcal){
+// metas de macros em gramas (definidas em Config)
+function getMacroGoalsGrams(){
   const m = state.settings.macros || DEFAULT_MACROS;
-  return {
-    p: Math.round((goalKcal * (m.p||0)/100) / 4),
-    c: Math.round((goalKcal * (m.c||0)/100) / 4),
-    f: Math.round((goalKcal * (m.f||0)/100) / 9),
-  };
+  return { p: Math.round(m.p||0), c: Math.round(m.c||0), f: Math.round(m.f||0) };
 }
 
 /* ============ render do log diário (agrupado por refeição) ============ */
@@ -1886,13 +1915,16 @@ function renderLog(){
     const groups = orderedMeals.map(m=>({ name:m, items: items.map((it,i)=>({...it,_i:i})).filter(it=>it.meal===m) }));
     if(hasSemRefeicao) groups.push({ name:'Sem refeição', items: items.map((it,i)=>({...it,_i:i})).filter(it=>!it.meal) });
 
+    const visNames = groups.map(x=>x.name).filter(n=>configMeals.includes(n));
     mealsContainer.innerHTML = groups.map(g=>{
+      const vi = visNames.indexOf(g.name);
       const sub = g.items.reduce((a,it)=>a+it.kcal,0);
       const isPinned = !!state.fixedMeals[g.name];
       return `<div class="meal-block">
         <div class="meal-head" data-meal-toggle="${g.name}">
           <span class="mh-name"><span class="mh-dot"></span><span>${g.name}</span></span>
           <span class="mh-sub">${Math.round(sub)} kcal
+            ${vi>0?`<button class="mv-btn" data-mv="-1" data-meal="${g.name}" title="Subir refeição">▲</button>`:''}${vi>=0 && vi<visNames.length-1?`<button class="mv-btn" data-mv="1" data-meal="${g.name}" title="Descer refeição">▼</button>`:''}
             <button class="pin-btn${isPinned?' pinned':''}" data-meal="${g.name}" title="${isPinned?'Atualizar refeição fixa':'Fixar esta refeição'}">📌</button>
             <svg class="ic chevron" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M6 9l6 6 6-6"/></svg>
           </span>
@@ -1915,6 +1947,12 @@ function renderLog(){
         </div>
       </div>`;
     }).join('');
+    mealsContainer.querySelectorAll('.mv-btn').forEach(b=>{
+      b.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        moveMealVisible(b.dataset.meal, parseInt(b.dataset.mv), visNames);
+      });
+    });
     mealsContainer.querySelectorAll('.pin-btn').forEach(b=>{
       b.addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -1938,7 +1976,7 @@ function renderLog(){
     kcal:acc.kcal+it.kcal, p:acc.p+it.p, c:acc.c+it.c, f:acc.f+it.f, fb:acc.fb+(it.fb||0), na:acc.na+(it.na||0)
   }), {kcal:0,p:0,c:0,f:0,fb:0,na:0});
   const goal = getGoal();
-  const macroGoals = getMacroGoalsGrams(goal);
+  const macroGoals = getMacroGoalsGrams();
   document.getElementById('kcalTotal').textContent = Math.round(totals.kcal);
   document.getElementById('kcalGoalShown').textContent = goal;
   document.getElementById('kcalBarFill').style.width = Math.min((totals.kcal/goal)*100, 100)+'%';
@@ -1947,7 +1985,7 @@ function renderLog(){
   document.getElementById('fTotal').textContent = totals.f.toFixed(1);
   document.getElementById('fbTotal').textContent = totals.fb.toFixed(1);
   document.getElementById('naTotal').textContent = Math.round(totals.na);
-  // meta de cada macro em gramas, calculada pela distribuição % configurada em Config
+  // meta de cada macro em gramas (Config)
   document.getElementById('pGoalG').textContent = macroGoals.p;
   document.getElementById('cGoalG').textContent = macroGoals.c;
   document.getElementById('fGoalG').textContent = macroGoals.f;
@@ -2073,9 +2111,10 @@ function updateMacroSumHelp(){
   const p = parseFloat(document.getElementById('macroP').value)||0;
   const c = parseFloat(document.getElementById('macroC').value)||0;
   const f = parseFloat(document.getElementById('macroF').value)||0;
-  const sum = p+c+f;
+  const kcal = Math.round(p*4 + c*4 + f*9);
+  const goal = state.settings.goalKcal || 2000;
   const help = document.getElementById('macroSumHelp');
-  help.textContent = `Soma atual: ${sum}%` + (sum!==100 ? ' — o ideal é 100%, mas o app aceita qualquer valor.' : ' ✓');
+  help.textContent = `Total dos macros: ${kcal} kcal · meta do dia: ${goal} kcal` + (Math.abs(kcal-goal)<=50 ? ' ✓' : ` (diferença de ${kcal-goal>0?'+':''}${kcal-goal} kcal)`);
 }
 ['macroP','macroC','macroF'].forEach(id=>{
   document.getElementById(id).addEventListener('input', updateMacroSumHelp);
@@ -2087,10 +2126,19 @@ document.getElementById('saveMacrosBtn').addEventListener('click', ()=>{
     f: parseFloat(document.getElementById('macroF').value) || 0,
   };
   saveState(); renderLog();
-  alert('Distribuição de macros salva.');
+  alert('Metas de macros salvas.');
 });
 
 /* ---- gestão de refeições ---- */
+// move uma refeição pra cima/baixo, trocando com a vizinha visível no dia
+function moveMealVisible(name, dir, visibleNames){
+  const arr = state.settings.meals;
+  const k = visibleNames.indexOf(name), n = visibleNames[k+dir];
+  if(k<0 || !n) return;
+  const a = arr.indexOf(name), b = arr.indexOf(n);
+  [arr[a],arr[b]] = [arr[b],arr[a]];
+  saveState(); renderMealChips(); populateMealSelect(); renderLog();
+}
 function renderMealChips(){
   const box = document.getElementById('mealChips');
   const meals = state.settings.meals || [];
@@ -2099,10 +2147,12 @@ function renderMealChips(){
     return;
   }
   box.innerHTML = meals.map((m,i)=>`
-    <span class="meal-chip">${m}<button data-i="${i}" title="Remover">✕</button></span>`).join('');
+    <span class="meal-chip">${i>0?`<button data-act="l" data-i="${i}" title="Mover pra antes">◀</button>`:''}${m}${i<meals.length-1?`<button data-act="r" data-i="${i}" title="Mover pra depois">▶</button>`:''}<button data-act="x" data-i="${i}" title="Remover">✕</button></span>`).join('');
   box.querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{
-      state.settings.meals.splice(parseInt(b.dataset.i),1);
+      const i = parseInt(b.dataset.i), a = b.dataset.act, arr = state.settings.meals;
+      if(a==='x') arr.splice(i,1);
+      else { const j = a==='l' ? i-1 : i+1; [arr[i],arr[j]] = [arr[j],arr[i]]; }
       saveState(); renderMealChips(); populateMealSelect(); renderLog();
     });
   });
