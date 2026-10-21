@@ -459,6 +459,10 @@ footer.foot{text-align:center;padding:36px 0 10px;color:var(--ink-soft);font-siz
   max-width:140px;font:inherit;font-size:12px;font-weight:600;color:var(--ink);
   background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:6px 8px;
 }
+.macro-hist{margin-top:14px;font-size:13px;}
+.macro-hist summary{cursor:pointer;font-weight:700;color:var(--ink-soft);}
+.macro-hist .mh-row{padding:9px 0;border-bottom:1px solid var(--line);}
+.macro-hist .mh-when{font-size:11.5px;color:var(--ink-soft);margin-bottom:2px;}
 .mv-btn{
   border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:12px;
   padding:2px 5px;line-height:1;opacity:.6;transition:.15s;
@@ -916,7 +920,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         <div class="help">Prefere calcular a partir do seu peso, altura e objetivo? Use a aba <strong>Calculadora</strong> — o resultado de lá pode ser aplicado direto aqui como sua meta diária.</div>
 
         <div class="divider-lbl">Metas de macros (g)</div>
-        <p class="help">Defina direto em gramas a meta diária de proteína, carboidrato e gordura.</p>
+        <p class="help">Defina direto em gramas a meta diária. Mudanças valem de hoje em diante; dias anteriores mantêm a meta que tinham.</p>
         <div class="field-row">
           <div class="field"><label>Proteína (g)</label><input type="number" id="macroP" min="0" max="100" step="1"></div>
           <div class="field"><label>Carboidrato (g)</label><input type="number" id="macroC" min="0" max="100" step="1"></div>
@@ -924,6 +928,7 @@ table.print-table.small th, table.print-table.small td{padding:3px 8px;}
         </div>
         <div class="help" id="macroSumHelp"></div>
         <button class="btn ghost small" id="saveMacrosBtn">Salvar metas</button>
+        <details class="macro-hist"><summary>Histórico de mudanças</summary><div id="macroHistList"></div></details>
 
         <div class="divider-lbl">Refeições</div>
         <p class="help">Defina quais refeições aparecem para escolher ao adicionar um alimento. Você decide quantas e quais usar.</p>
@@ -1164,6 +1169,12 @@ function defaultState(){
 }
 // migra metas de macros antigas (%) para gramas, uma única vez
 function migrateMacros(s){
+  migrateMacros0(s);
+  const st = s.settings;
+  if(!st.macroHistory || !st.macroHistory.length) st.macroHistory = [{ from:'0000-00-00', ...st.macros }];
+  if(!st.macroLog) st.macroLog = [];
+}
+function migrateMacros0(s){
   const st = s.settings;
   if(st.macroMode === 'g' && st.macros) return;
   if(!st.macros){ st.macros = {...DEFAULT_MACROS}; st.macroMode = 'g'; return; }
@@ -1885,8 +1896,16 @@ function setMacroBar(id, consumed, goalG){
   el.classList.toggle('over', pct>100);
 }
 // metas de macros em gramas (definidas em Config)
-function getMacroGoalsGrams(){
-  const m = state.settings.macros || DEFAULT_MACROS;
+// meta de macros vigente em uma data (histórico por data de vigência)
+function getMacroGoalsGrams(key){
+  const st = state.settings;
+  const h = st.macroHistory;
+  let m = st.macros || DEFAULT_MACROS;
+  if(h && h.length){
+    m = h[0];
+    if(key){ for(const e of h){ if(e.from <= key) m = e; else break; } }
+    else m = h[h.length-1];
+  }
   return { p: Math.round(m.p||0), c: Math.round(m.c||0), f: Math.round(m.f||0) };
 }
 
@@ -1976,7 +1995,7 @@ function renderLog(){
     kcal:acc.kcal+it.kcal, p:acc.p+it.p, c:acc.c+it.c, f:acc.f+it.f, fb:acc.fb+(it.fb||0), na:acc.na+(it.na||0)
   }), {kcal:0,p:0,c:0,f:0,fb:0,na:0});
   const goal = getGoal();
-  const macroGoals = getMacroGoalsGrams();
+  const macroGoals = getMacroGoalsGrams(key);
   document.getElementById('kcalTotal').textContent = Math.round(totals.kcal);
   document.getElementById('kcalGoalShown').textContent = goal;
   document.getElementById('kcalBarFill').style.width = Math.min((totals.kcal/goal)*100, 100)+'%';
@@ -2106,6 +2125,7 @@ function syncMacroForm(){
   document.getElementById('macroC').value = m.c;
   document.getElementById('macroF').value = m.f;
   updateMacroSumHelp();
+  renderMacroHistory();
 }
 function updateMacroSumHelp(){
   const p = parseFloat(document.getElementById('macroP').value)||0;
@@ -2120,14 +2140,38 @@ function updateMacroSumHelp(){
   document.getElementById(id).addEventListener('input', updateMacroSumHelp);
 });
 document.getElementById('saveMacrosBtn').addEventListener('click', ()=>{
-  state.settings.macros = {
+  const st = state.settings;
+  const prev = { ...(st.macros || DEFAULT_MACROS) };
+  const nw = {
     p: parseFloat(document.getElementById('macroP').value) || 0,
     c: parseFloat(document.getElementById('macroC').value) || 0,
     f: parseFloat(document.getElementById('macroF').value) || 0,
   };
-  saveState(); renderLog();
-  alert('Metas de macros salvas.');
+  if(nw.p===prev.p && nw.c===prev.c && nw.f===prev.f){ alert('Nenhuma mudança nas metas.'); return; }
+  if(!st.macroHistory || !st.macroHistory.length) st.macroHistory = [{ from:'0000-00-00', ...prev }];
+  if(!st.macroLog) st.macroLog = [];
+  const today = todayStr(new Date());
+  st.macroHistory = st.macroHistory.filter(e=>e.from !== today);
+  st.macroHistory.push({ from:today, ...nw });
+  st.macroHistory.sort((x,y)=> x.from < y.from ? -1 : 1);
+  st.macros = nw;
+  st.macroLog.push({ at:new Date().toISOString(), from:today, old:prev, nw });
+  saveState(); renderLog(); renderMacroHistory();
+  alert('Metas salvas. Valem de hoje em diante; dias anteriores não mudam.');
 });
+function renderMacroHistory(){
+  const box = document.getElementById('macroHistList');
+  if(!box) return;
+  const log = (state.settings.macroLog || []).slice().reverse();
+  if(!log.length){ box.innerHTML = '<div class="help">Nenhuma mudança registrada ainda.</div>'; return; }
+  const fmtD = k => k.split('-').reverse().join('/');
+  const names = { p:'Proteína', c:'Carbo', f:'Gordura' };
+  box.innerHTML = log.map(e=>{
+    const when = new Date(e.at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const changes = ['p','c','f'].filter(k=>e.old[k]!==e.nw[k]).map(k=>`${names[k]}: <b>${e.old[k]}</b> → <b>${e.nw[k]}</b> g`).join(' · ');
+    return `<div class="mh-row"><div class="mh-when">${when} · vale desde ${fmtD(e.from)}</div><div>${changes}</div></div>`;
+  }).join('');
+}
 
 /* ---- gestão de refeições ---- */
 // move uma refeição pra cima/baixo, trocando com a vizinha visível no dia
